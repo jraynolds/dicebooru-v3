@@ -37,7 +37,8 @@ export const useAuthStore = defineStore({
 				}
 			}
 
-			if (data) this.session = data.session;
+			if (data != null) this.session = data.session;
+			if (data.session.user != null) this.user = data.session.user;
 		},
 		// async fetchPosts() {
 		//   this.posts = []
