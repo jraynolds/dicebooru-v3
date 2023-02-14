@@ -60,6 +60,10 @@ export default {
 			return true;
 		},
 	},
+
+	mounted() {
+		this.isValid = false;
+	},
 	
 	setup() {
 		const emailRules = [

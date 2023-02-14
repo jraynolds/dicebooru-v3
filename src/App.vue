@@ -9,7 +9,6 @@
 </template>
 
 <script>
-import HelloWorld from '@/components/HelloWorld.vue'
 import Header from '@/components/framework/Header.vue'
 import { useAuthStore } from '@/stores/auth'
 import Popup from '@/components/Popup.vue'
@@ -18,7 +17,6 @@ export default {
   name: 'App',
 
   components: {
-    HelloWorld,
 		Header,
     Popup
   },

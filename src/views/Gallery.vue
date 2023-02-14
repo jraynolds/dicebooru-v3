@@ -1,5 +1,7 @@
 <template>
-	<v-container>
+	<ImageUpload />
+
+	<v-container style="min-height: 100%;">
 		<v-row>
 			<v-col>
 				<SearchBar 
@@ -39,7 +41,6 @@
 		<v-row>
 			<MapCard v-for="map in dataStore.getMaps" :key="map.id" :map="map" />
 		</v-row>
-		
 	</v-container>
 </template>
 
@@ -48,12 +49,14 @@ import { ref } from 'vue';
 
 import SearchBar from '@/components/search/SearchBar.vue';
 import MapCard from '@/components/images/MapCard.vue';
+import ImageUpload from '@/components/images/ImageUpload.vue';
 
 import { useDataStore } from '@/stores/data';
+import { useAuthStore } from '@/stores/auth';
 import { useFiltersStore } from '@/stores/filters';
 
 export default {
-	components: { SearchBar, MapCard },
+	components: { SearchBar, MapCard, ImageUpload },
 
 	computed: {
 		includedTags() {
@@ -79,12 +82,14 @@ export default {
 	setup() {
 		const dataStore = useDataStore();
 		const filtersStore = useFiltersStore();
+		const authStore = useAuthStore();
 
 		const searching = ref(false);
 
 		return {
 			dataStore,
 			filtersStore,
+			authStore,
 
 			searching
 		}

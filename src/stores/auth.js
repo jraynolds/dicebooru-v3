@@ -15,7 +15,7 @@ export const useAuthStore = defineStore({
 		getLoginPanelOpen: (state) => state.loginPanelOpen
 	},
 	actions: {
-		setLoginPanelOpen(open) {
+		setLoginPanelOpen(open=true) {
 			this.loginPanelOpen = open;
 			if (DEBUGS.pinia) console.log(`Changing login panel open status to ${open}.`);
 		},

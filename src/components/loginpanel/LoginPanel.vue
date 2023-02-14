@@ -89,7 +89,10 @@ export default {
 	computed: {
 		open: {
 			get() { return this.authStore.loginPanelOpen; },
-			set(val) { this.authStore.setLoginPanelOpen(val); }
+			set(val) { 
+				this.authStore.setLoginPanelOpen(val);
+				if (!val) this.reset(); 
+			}
 		},
 		submitReady() {
 			if (this.tab == "login" && this.loginValid) return true;
@@ -170,6 +173,15 @@ export default {
 			this.processing = false;
 
 			this.authStore.loadCurrentSession();
+		},
+		reset() {
+			this.loginValid = false;
+			this.loginEmail = "";
+			this.loginPassword = "";
+
+			this.signupValid = false;
+			this.signupEmail = "";
+			this.signupPassword = "";
 		}
 	},
 
