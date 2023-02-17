@@ -1,6 +1,8 @@
 <template>
 	<ImageUpload />
 
+	<MapPopup v-bind:isOpen="popupOpen" @update:isOpen="test" :map="popupMap" />
+
 	<v-container style="min-height: 100%;">
 		<v-row>
 			<v-col>
@@ -39,7 +41,14 @@
 		</v-row>
 
 		<v-row>
-			<MapCard v-for="map in dataStore.getMaps" :key="map.id" :map="map" />
+			<MapCard 
+				v-for="map in dataStore.getMaps" 
+				:key="map.id" 
+				:map="map"
+				@click="selectMap(map)" 
+				height="400" 
+				width="300" 
+			/>
 		</v-row>
 	</v-container>
 </template>
@@ -54,9 +63,10 @@ import ImageUpload from '@/components/images/ImageUpload.vue';
 import { useDataStore } from '@/stores/data';
 import { useAuthStore } from '@/stores/auth';
 import { useFiltersStore } from '@/stores/filters';
+import MapPopup from '@/components/images/MapPopup.vue';
 
 export default {
-	components: { SearchBar, MapCard, ImageUpload },
+	components: { SearchBar, MapCard, ImageUpload, MapPopup },
 
 	computed: {
 		includedTags() {
@@ -72,6 +82,15 @@ export default {
 			this.searching = true;
 			await this.dataStore.loadFilteredMaps();
 			this.searching = false;
+		},
+		selectMap(map) {
+			this.popupMap = map;
+			this.popupOpen = true;
+		},
+		test(val) {
+			console.log(val);
+			this.popupOpen = val;
+			console.log(this.popupOpen);
 		}
 	},
 
@@ -86,12 +105,18 @@ export default {
 
 		const searching = ref(false);
 
+		const popupOpen = ref(false);
+		const popupMap = ref(null);
+
 		return {
 			dataStore,
 			filtersStore,
 			authStore,
 
-			searching
+			searching,
+
+			popupOpen,
+			popupMap
 		}
 	}
 }

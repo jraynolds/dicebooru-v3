@@ -1,6 +1,6 @@
 <template>
-	<v-card height="430" width="300" style="overflow: hidden;">
-		<v-btn text height="50" :disabled="!map?.author?.name" style="width: 100%;">
+	<v-card style="overflow: hidden; display: grid; grid-template-rows: '80px 1fr 80px'; row-gap: 10px;">
+		<v-btn text :disabled="!map?.author?.name" style="width: 100%; height: 100%;">
 			<v-card-title>
 				{{ map?.author?.name || "Unknown Author" }}
 			</v-card-title>
@@ -12,7 +12,7 @@
 			</v-icon>
 		</v-btn>
 
-		<v-img :src="map.thumb_url" style="height: 300px;">
+		<v-img :src="map.thumb_url">
 			<template v-slot:placeholder>
 				<div class="d-flex align-center justify-center fill-height">
 					<v-progress-circular
@@ -23,13 +23,13 @@
 			</template>
 		</v-img>
 
-		<v-row class="pl-2 ma-0 pb-1" style="height: 80px; overflow-y: auto;">
+		<v-row class="pl-2 ma-0 pb-1 mb-n3" style="overflow-y: auto; height: 80px;">
 			<TagChip 
 				v-for="mapTag of map.tags" 
 				:key="mapTag.id" 
 				:tag="mapTag.tag"
 				style="min-width: 'fit-content;'"
-				class="mt-1 mr-1"
+				class="mb-1 mr-1"
 				@click="toggleFilterTag(mapTag.tag)"
 			/>
 		</v-row>
@@ -40,7 +40,7 @@
 import { useDataStore } from '@/stores/data';
 import { useFiltersStore } from '@/stores/filters';
 
-import TagChip from './TagChip.vue'
+import TagChip from '@/components/images/TagChip.vue'
 export default {
 	props: [ "map" ],
 
