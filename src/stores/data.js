@@ -148,6 +148,7 @@ export const useDataStore = defineStore({
 			const map = this.maps.find(m => m.id === mapID);
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(map);
 			if (!map) return;
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(`Loading image at URL ${map.thumb_src}`);
 
 			const { data, error } = await supabase
 				.storage
@@ -158,6 +159,23 @@ export const useDataStore = defineStore({
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(error);
 
 			if (data?.signedUrl) map.thumb_url = data.signedUrl;
+		},
+		async loadURL(mapID) {
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(`Loading a URL for map ${mapID}`);
+			const map = this.maps.find(m => m.id === mapID);
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(map);
+			if (!map) return;
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(`Loading image at URL ${map.src}`);
+
+			const { data, error } = await supabase
+				.storage
+				.from('maps')
+				.createSignedUrl(map.src, 600);
+			
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(error);
+
+			if (data?.signedUrl) map.url = data.signedUrl;
 		},
 		// async loadMapTags(mapID) {
 			// if (DEBUGS.pinia || DEBUGS.backend) console.log(`Loading tags for map ${mapID}`);

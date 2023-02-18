@@ -90,7 +90,6 @@ export default {
 		test(val) {
 			console.log(val);
 			this.popupOpen = val;
-			console.log(this.popupOpen);
 		}
 	},
 

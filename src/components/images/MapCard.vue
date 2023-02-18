@@ -1,5 +1,5 @@
 <template>
-	<v-card style="overflow: hidden; display: grid; grid-template-rows: '80px 1fr 80px'; row-gap: 10px;">
+	<v-card class="mapCard">
 		<v-btn text :disabled="!map?.author?.name" style="width: 100%; height: 100%;">
 			<v-card-title>
 				{{ map?.author?.name || "Unknown Author" }}
@@ -12,7 +12,7 @@
 			</v-icon>
 		</v-btn>
 
-		<v-img :src="map.thumb_url">
+		<v-img :src="large ? map.url : map.thumb_url" @click="$emit('imageClick')" class="clickable">
 			<template v-slot:placeholder>
 				<div class="d-flex align-center justify-center fill-height">
 					<v-progress-circular
@@ -29,8 +29,8 @@
 				:key="mapTag.id" 
 				:tag="mapTag.tag"
 				style="min-width: 'fit-content;'"
-				class="mb-1 mr-1"
 				@click="toggleFilterTag(mapTag.tag)"
+				class="mb-1 mr-1"
 			/>
 		</v-row>
 	</v-card>
@@ -42,7 +42,7 @@ import { useFiltersStore } from '@/stores/filters';
 
 import TagChip from '@/components/images/TagChip.vue'
 export default {
-	props: [ "map" ],
+	props: [ "map", "large" ],
 
 	components: { TagChip },
 
@@ -75,5 +75,15 @@ export default {
 </script>
 
 <style>
+.mapCard {
+	overflow: hidden; 
+	display: grid !important; 
+	grid-template-rows: 50px 1fr 80px; 
+	row-gap: 10px;
+	height: 100%;
+}
 
+.clickable:hover {
+	cursor: pointer;
+}
 </style>
