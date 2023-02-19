@@ -5,20 +5,19 @@
 		:label="label" 
 		:prepend-icon="icon"
 		:color="color" 
-		chips 
+		chips
+		closable-chips
 		multiple
 		clearable
 		hide-selected
 		item-title="name"
 		return-object
-		name="includes"
 	>
 		<template v-slot:chip="{ props, item }">
 			<v-chip
 				v-bind="props"
 				:prepend-icon="item.raw.type.icon"
 				:text="item.raw.name"
-				closable
 			/>
 		</template>
 		<template v-slot:item="{ props, item }">
@@ -30,7 +29,7 @@
 				<template v-slot:title>
 					{{ item.title.substring(0, 1).toUpperCase() + item.title.substring(1) }}
 					<em style="font-size: x-small; color: gray;">
-						{{ `${item.value.num_maps} image${item.value.num_maps > 1 ? 's' : ''}` }}
+						<span v-if="displayCount">{{ `${item.value.num_maps} image${item.value.num_maps > 1 ? 's' : ''}` }}</span>
 					</em>
 				</template>
 			</v-list-item>
@@ -39,26 +38,15 @@
 </template>
 
 <script>
-import { ref } from 'vue';
-
 export default {
-	props: [ "selections", "color", "label", "icon", "items"],
+	props: [ "selections", "color", "label", "icon", "items", "displayCount" ],
 	computed: {
 		model: {
 			get() { return this.selections; },
-			set(v) { 
-				console.log(`emitting ${v}`);
+			set(v) {
 				console.log(v);
-				this.$emit("changeSelections", v);
-				console.log(this.selections);
+				this.$emit("update:selections", v);
 			}
-		}
-	},
-	setup() {
-		const localSelections = ref([]);
-
-		return {
-			localSelections
 		}
 	}
 }

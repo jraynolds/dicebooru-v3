@@ -38,19 +38,28 @@ export const useDataStore = defineStore({
 	state: () => ({
 		tags: [],
 		authors: [],
-		maps: []
+		maps: [],
+		loading: false,
+		uploading: false,
 	}),
 	getters: {
 		getTags: (state) => state.tags,
 		getAuthors: (state) => state.authors,
 		getMaps: (state) => state.maps,
+		isLoading: (state) => state.loading,
+		isUploading: (state) => state.uploading,
 	},
 	actions: {
 		async initialLoad() {
 			if (DEBUGS.pinia || DEBUGS.backend) console.log("Performing initial load.");
-			this.loadTags();
-			this.loadAuthors();
-			this.loadMaps();
+			this.loading = true;
+			const promises = [
+				this.loadTags(),
+				this.loadAuthors(),
+				this.loadMaps()
+			]
+			await Promise.all(promises);
+			this.loading = false;
 		},
 		async loadTags() {
 			if (DEBUGS.pinia || DEBUGS.backend) console.log("Getting tags.");
@@ -109,11 +118,13 @@ export const useDataStore = defineStore({
 			}
 		},
 		async loadFilteredMaps() {
+			this.loading = true;
 			if (DEBUGS.pinia || DEBUGS.backend) console.log("Getting filtered maps.");
 			const filtersStore = useFiltersStore();
 			const includedTags = filtersStore.getIncludedTags;
 			const excludedTags = filtersStore.getExcludedTags;
-			if (includedTags?.length == 0 && excludedTags.length == 0) return this.loadMaps();
+			const author = filtersStore.getAuthor;
+			if (includedTags?.length == 0 && excludedTags.length == 0 && !author) return this.loadMaps();
 
 			let query = supabase
 				.from('maps_tags_grouped_by_map')
@@ -122,14 +133,13 @@ export const useDataStore = defineStore({
 						${MAP_SELECT_QUERY}
 					)
 				`)
-			console.log(query);
 			if (includedTags?.length > 0) query = query.contains('tags', includedTags.map(t => t.id));
-			// const excludedTagTuple = `(${(excludedTags.map(t => t.id)).join("','")})`;
-			const excludedTagObject = `{${(excludedTags.map(t => `"${t.id}"`)).join("','")}}`;
-			console.log(excludedTagObject);
-			if (excludedTags?.length > 0) query = query.not('tags', 'cs', excludedTagObject);
+			if (excludedTags?.length > 0) {
+				const excludedTagObject = `{${(excludedTags.map(t => `"${t.id}"`)).join("','")}}`;
+				query = query.not('tags', 'cs', excludedTagObject);
+			}
+			if (author) query = query.eq('author', author.id);
 			
-			// console.log(query);
 			const { data, error } = await query;
 			
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
@@ -142,6 +152,8 @@ export const useDataStore = defineStore({
 			} else {
 				this.maps = [];
 			}
+
+			this.loading = false;
 		},
 		async loadThumbURL(mapID) {
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(`Loading a thumb URL for map ${mapID}`);
@@ -177,33 +189,13 @@ export const useDataStore = defineStore({
 
 			if (data?.signedUrl) map.url = data.signedUrl;
 		},
-		// async loadMapTags(mapID) {
-			// if (DEBUGS.pinia || DEBUGS.backend) console.log(`Loading tags for map ${mapID}`);
-			// const map = this.maps.find(m => m.id === mapID);
-			// if (DEBUGS.pinia || DEBUGS.backend) console.log(map);
-			// if (!map) return;
+		async uploadMap(file, author, tags) {
+			if (DEBUGS.pinia || DEBUGS.backend) console.log("Uploading a new map:");
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(file);
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(author);
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(tags);
 
-			// const { data, error } = await supabase
-			// 	.from('maps_tags')
-			// 	.select(`
-			// 		id,
-			// 		tag (
-			// 			id,
-			// 			name,
-			// 			description,
-			// 			type:tagtypes (
-			// 				name,
-			// 				description,
-			// 				icon
-			// 			)
-			// 		)
-			// 	`)
-			// 	.eq('map', mapID);
-			
-			// if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
-			// if (DEBUGS.pinia || DEBUGS.backend) console.log(error);
-
-			// if (data?.length > 0) map.tags = data;
-		// }
+			// todo
+		}
 	}
 })

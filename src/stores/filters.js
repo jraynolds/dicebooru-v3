@@ -5,11 +5,13 @@ export const useFiltersStore = defineStore({
 	id: 'filters',
 	state: () => ({
 		includedTags: [],
-		excludedTags: []
+		excludedTags: [],
+		author: null,
 	}),
 	getters: {
 		getIncludedTags: (state) => state.includedTags,
-		getExcludedTags: (state) => state.excludedTags
+		getExcludedTags: (state) => state.excludedTags,
+		getAuthor: (state) => state.author,
 	},
 	actions: {
 		setIncludedTags(arr) {
@@ -33,6 +35,11 @@ export const useFiltersStore = defineStore({
 			if (DEBUGS.pinia || DEBUGS.filters) console.log("Changing our array of excluded, filtering tags to:");
 			if (DEBUGS.pinia || DEBUGS.filters) console.log(arr);
 			this.excludedTags = arr;
+		},
+		setAuthor(author) { 
+			if (DEBUGS.pinia || DEBUGS.filters) console.log("Changing our filtering author to:");
+			if (DEBUGS.pinia || DEBUGS.filters) console.log(author);
+			this.author = author;
 		}
 	}
 })

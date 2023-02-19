@@ -6,23 +6,35 @@
 	<v-container style="min-height: 100%;">
 		<v-row>
 			<v-col>
+				<v-select
+					class="px-4"
+					bg-color="primary"
+					prepend-inner-icon="mdi-account"
+					:items="dataStore.getAuthors"
+					v-model="author"
+					label="Filter by an author:"
+				/>
+			</v-col>
+			<v-col>
 				<SearchBar 
 					bg-color="success" 
 					prepend-inner-icon="mdi-tag" 
-					:items="includedTags" 
-					:selections="filtersStore.includedTags"
-					@changeSelections="filtersStore.setIncludedTags"
+					:items="availableIncludedTags" 
+					:selections="selectedIncludedTags"
+					@update:selections="setSelectedIncludedTags"
 					label="Include these tags:"
+					:displayCount="true"
 				/>
 			</v-col>
 			<v-col>
 				<SearchBar 
 					bg-color="error" 
-					prepend-inner-icon="mdi-tag-off"
-					:items="excludedTags" 
-					:selections="filtersStore.excludedTags"
-					@changeSelections="filtersStore.setExcludedTags"
+					prepend-inner-icon="mdi-tag-off" 
+					:items="availableExcludedTags" 
+					:selections="selectedExcludedTags"
+					@update:selections="setSelectedExcludedTags"
 					label="Exclude these tags:"
+					:displayCount="true"
 				/>
 			</v-col>
 		</v-row>
@@ -69,11 +81,13 @@ export default {
 	components: { SearchBar, MapCard, ImageUpload, MapPopup },
 
 	computed: {
-		includedTags() {
-			return this.dataStore.getTags.filter(t => !this.filtersStore.getExcludedTags.includes(t));
-		},
-		excludedTags() {
-			return this.dataStore.getTags.filter(t => !this.filtersStore.getIncludedTags.includes(t));
+		availableIncludedTags() { return this.dataStore.getTags.filter(t => !this.filtersStore.getExcludedTags.includes(t)); },
+		selectedIncludedTags() { return this.filtersStore.getIncludedTags; },
+		availableExcludedTags() { return this.dataStore.getTags.filter(t => !this.filtersStore.getIncludedTags.includes(t)); },
+		selectedExcludedTags() { return this.filtersStore.getExcludedTags; },
+		author: {
+			get() { return this.filtersStore.getAuthor; },
+			set(val) { return this.filtersStore.setAuthor(val); },
 		}
 	},
 
@@ -89,8 +103,9 @@ export default {
 		},
 		test(val) {
 			console.log(val);
-			this.popupOpen = val;
-		}
+		},
+		setSelectedIncludedTags(val) { this.filtersStore.setIncludedTags(val); },
+		setSelectedExcludedTags(val) { this.filtersStore.setExcludedTags(val); },
 	},
 
 	mounted() {
