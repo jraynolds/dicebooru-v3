@@ -1,6 +1,6 @@
 <template>
 	<v-dialog 
-		v-model="open"
+		v-model="isOpen"
 		width="auto"
 	>
 		<MapCard 
@@ -19,14 +19,14 @@ import { useDataStore } from '@/stores/data';
 import MapCard from "@/components/images/MapCard.vue";
 
 export default {
-	props: [ "isOpen", "map" ],
+	props: [ "open", "map" ],
 
 	components: { MapCard },
 
 	computed: {
-		open: {
-			get() { return this.isOpen; },
-			set(val) { this.$emit("update:isOpen", val); }
+		isOpen: {
+			get() { return this.open; },
+			set(val) { this.$emit("update:open", val); }
 		}
 	},
 

@@ -1,7 +1,7 @@
 <template>
 	<ImageUpload />
 
-	<MapPopup v-bind:isOpen="popupOpen" @update:isOpen="test" :map="popupMap" />
+	<MapPopup :open="popupOpen" @update:open="setPopupOpen" :map="popupMap" />
 
 	<v-container style="min-height: 100%;">
 		<v-row>
@@ -101,8 +101,8 @@ export default {
 			this.popupMap = map;
 			this.popupOpen = true;
 		},
-		test(val) {
-			console.log(val);
+		setPopupOpen(val) {
+			this.popupOpen = val;
 		},
 		setSelectedIncludedTags(val) { this.filtersStore.setIncludedTags(val); },
 		setSelectedExcludedTags(val) { this.filtersStore.setExcludedTags(val); },

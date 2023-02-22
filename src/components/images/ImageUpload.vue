@@ -74,7 +74,7 @@
 			<v-card-actions>
 				<v-spacer />
 
-				<v-btn color="success" variant="flat" :disabled="!uploadable">
+				<v-btn color="success" variant="flat" :disabled="!uploadable" @click="upload">
 					<template v-slot:append v-if="uploadingMap">
 						<v-progress-circular indeterminate size="small" />
 					</template>
@@ -108,6 +108,9 @@ export default {
 	methods: {
 		createURLFromFile(file) {
 			return URL.createObjectURL(file);
+		},
+		upload() {
+			this.dataStore.uploadMap(this.image, this.uploadAuthor, this.uploadTags);
 		}
 	},
 

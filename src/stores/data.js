@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { useFiltersStore } from './filters';
 import supabase from '@/plugins/supabase';
 import DEBUGS from '@/plugins/debug';
+import Compressor from 'compressorjs'
 
 const MAP_SELECT_QUERY = `
 id,
@@ -40,14 +41,15 @@ export const useDataStore = defineStore({
 		authors: [],
 		maps: [],
 		loading: false,
-		uploading: false,
+		uploadStage: 0,
 	}),
 	getters: {
 		getTags: (state) => state.tags,
 		getAuthors: (state) => state.authors,
 		getMaps: (state) => state.maps,
 		isLoading: (state) => state.loading,
-		isUploading: (state) => state.uploading,
+		isUploading: (state) => state.uploadStage != 0,
+		getUploadStage: (state) => state.uploadStage
 	},
 	actions: {
 		async initialLoad() {
@@ -77,7 +79,7 @@ export const useDataStore = defineStore({
 					num_maps
 				`);
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
-			if (DEBUGS.pinia || DEBUGS.backend) console.log(error);
+			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) console.log(error);
 
 			if (data?.length > 0) this.tags = data;
 		},
@@ -96,7 +98,7 @@ export const useDataStore = defineStore({
 					)
 				`);
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
-			if (DEBUGS.pinia || DEBUGS.backend) console.log(error);
+			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) console.log(error);
 
 			if (data?.length > 0) this.authors = data;
 		},
@@ -106,7 +108,7 @@ export const useDataStore = defineStore({
 				.from('maps')
 				.select(MAP_SELECT_QUERY);
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
-			if (DEBUGS.pinia || DEBUGS.backend) console.log(error);
+			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) console.log(error);
 
 			if (data?.length > 0) 
 			{
@@ -143,7 +145,7 @@ export const useDataStore = defineStore({
 			const { data, error } = await query;
 			
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
-			if (DEBUGS.pinia || DEBUGS.backend) console.log(error);
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(error || DEBUGS.error);
 
 			if (data.length > 0) {
 				const newMaps = [];
@@ -168,7 +170,7 @@ export const useDataStore = defineStore({
 				.createSignedUrl(map.thumb_src, 600);
 			
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
-			if (DEBUGS.pinia || DEBUGS.backend) console.log(error);
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(error || DEBUGS.error);
 
 			if (data?.signedUrl) map.thumb_url = data.signedUrl;
 		},
@@ -185,7 +187,7 @@ export const useDataStore = defineStore({
 				.createSignedUrl(map.src, 600);
 			
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
-			if (DEBUGS.pinia || DEBUGS.backend) console.log(error);
+			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) console.log(error);
 
 			if (data?.signedUrl) map.url = data.signedUrl;
 		},
@@ -195,7 +197,53 @@ export const useDataStore = defineStore({
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(author);
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(tags);
 
-			// todo
+			this.uploadStage = 1;
+			// Resize the image
+			const thumbFile = await this.resizeImage(file);
+			if (!thumbFile) return;
+
+			if (DEBUGS.pinia || DEBUGS.backend) console.log("Converting file to array...");
+			const fileAsArray = await new Response(file).arrayBuffer();
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(fileAsArray);
+
+			if (DEBUGS.pinia || DEBUGS.backend) console.log("Sending large image to be uploaded:");
+			const { data, error } = await supabase
+				.rpc('upload_image_to_storage', {
+					bucket_name: 'maps',
+					image_file: file
+				});
+			
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
+			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) console.log(error);
+
+		},
+		async resizeImage(image) {
+			if (DEBUGS.pinia) console.log("Resizing this image:");
+			if (DEBUGS.pinia) console.log(image);
+
+			const compress = async (file) => await new Promise((resolve, reject) => {
+				new Compressor(file, {
+					width: 500,
+					height: 500,
+					success: resolve,
+					error: reject
+				});
+			});
+
+			let resized = null;
+
+			await compress(image).then((result) => {
+				if (DEBUGS.pinia) console.log("Successfully resized:");
+				if (DEBUGS.pinia) console.log(result);
+				resized = result;
+			}).catch((err) => {
+				if (DEBUGS.pinia || DEBUGS.error) console.log("Couldn't resize!");
+				if (DEBUGS.pinia || DEBUGS.error) console.log(err);
+			});
+
+			if (DEBUGS.pinia) console.log(resized);
+
+			return resized;
 		}
 	}
 })

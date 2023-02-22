@@ -1,6 +1,6 @@
 <template>
 	<v-card class="mapCard">
-		<v-btn text :disabled="!map?.author?.name" style="width: 100%; height: 100%;">
+		<v-btn text :disabled="!map?.author?.name" style="width: 100%; height: 50px;" class="mb-1">
 			<v-card-title>
 				{{ map?.author?.name || "Unknown Author" }}
 			</v-card-title>
@@ -12,7 +12,12 @@
 			</v-icon>
 		</v-btn>
 
-		<v-img :src="large ? map.url : map.thumb_url" @click="$emit('imageClick')" class="clickable">
+		<v-img 
+			:src="large ? map.url : map.thumb_url" 
+			@click="$emit('imageClick')" 
+			class="clickable mb-1"
+			style="flex-shrink: 1"
+		>
 			<template v-slot:placeholder>
 				<div class="d-flex align-center justify-center fill-height">
 					<v-progress-circular
@@ -23,7 +28,7 @@
 			</template>
 		</v-img>
 
-		<v-row class="pl-2 ma-0 pb-1 mb-n3" style="overflow-y: auto; height: 80px;">
+		<v-row class="pl-2 ma-0 mb-n1" style="overflow-y: auto; height: 80px; min-height: 80px;">
 			<TagChip 
 				v-for="mapTag of map.tags" 
 				:key="mapTag.id" 
@@ -76,11 +81,9 @@ export default {
 
 <style>
 .mapCard {
-	overflow: hidden; 
-	display: grid !important; 
-	grid-template-rows: 50px 1fr 80px; 
-	row-gap: 10px;
-	height: 100%;
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
 }
 
 .clickable:hover {
