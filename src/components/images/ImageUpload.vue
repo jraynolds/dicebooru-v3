@@ -60,6 +60,8 @@
 				:items="dataStore.getAuthors"
 				v-model="uploadAuthor"
 				label="Made by this author:"
+				item-title="name"
+				return-object
 			/>
 			
 			<SearchBar
@@ -68,6 +70,7 @@
 				prepend-inner-icon="mdi-tag" 
 				:items="dataStore.getTags"
 				:selections="uploadTags"
+				@update:selections="uploadTags = $event"
 				label="Map displays these tags:"
 			/>
 
@@ -111,7 +114,10 @@ export default {
 		},
 		upload() {
 			this.dataStore.uploadMap(this.image, this.uploadAuthor, this.uploadTags);
-		}
+		},
+		// test(selections) {
+		// 	this.uploadTags = selections;
+		// }
 	},
 
 	watch: {

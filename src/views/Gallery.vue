@@ -13,6 +13,8 @@
 					:items="dataStore.getAuthors"
 					v-model="author"
 					label="Filter by an author:"
+					item-title="name"
+					return-object
 				/>
 			</v-col>
 			<v-col>

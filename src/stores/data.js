@@ -202,16 +202,25 @@ export const useDataStore = defineStore({
 			const thumbFile = await this.resizeImage(file);
 			if (!thumbFile) return;
 
-			if (DEBUGS.pinia || DEBUGS.backend) console.log("Converting file to array...");
-			const fileAsArray = await new Response(file).arrayBuffer();
-			if (DEBUGS.pinia || DEBUGS.backend) console.log(fileAsArray);
+			// if (DEBUGS.pinia || DEBUGS.backend) console.log("Converting file to array...");
+			// const fileAsArray = await new Response(file).arrayBuffer();
+			// if (DEBUGS.pinia || DEBUGS.backend) console.log(fileAsArray);
 
-			if (DEBUGS.pinia || DEBUGS.backend) console.log("Sending large image to be uploaded:");
+			if (DEBUGS.pinia || DEBUGS.backend) console.log("Attempting to contact server with this payload:");
+			const payload = new FormData();
+			payload.append('image', file);
+			payload.append('thumb', thumbFile);
+			payload.append('author', author.id);
+			payload.append('tags', tags.map(t => t.id).join(","));
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(...payload);
 			const { data, error } = await supabase
-				.rpc('upload_image_to_storage', {
-					bucket_name: 'maps',
-					image_file: file
-				});
+				.functions
+				.invoke(
+					'user-add-map',
+					{
+						body: payload
+					}
+				)
 			
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
 			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) console.log(error);
