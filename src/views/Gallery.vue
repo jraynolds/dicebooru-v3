@@ -54,15 +54,19 @@
 			</v-btn>
 		</v-row>
 
-		<v-row>
-			<MapCard 
+		<v-row class="justify-center align-center d-flex">
+			<v-col
+				class="d-flex align-center justify-center"
 				v-for="map in dataStore.getMaps" 
-				:key="map.id" 
-				:map="map"
-				@click="selectMap(map)" 
-				height="400" 
-				width="300" 
-			/>
+				:key="map.id"
+			>
+				<MapCard  
+					:map="map"
+					@click="selectMap(map)" 
+					height="400" 
+					width="300" 
+				/>
+			</v-col>
 		</v-row>
 	</v-container>
 </template>

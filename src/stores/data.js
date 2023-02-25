@@ -26,6 +26,7 @@ tags:maps_tags (
 		name,
 		description,
 		type:tagtypes (
+			id,
 			name,
 			description,
 			icon
@@ -52,6 +53,10 @@ export const useDataStore = defineStore({
 		getUploadStage: (state) => state.uploadStage
 	},
 	actions: {
+		getMapAuthor (map) {
+			if (!map?.author) return null;
+			return this.getAuthors.find(a => a.id === map.author);
+		},
 		async initialLoad() {
 			if (DEBUGS.pinia || DEBUGS.backend) console.log("Performing initial load.");
 			this.loading = true;

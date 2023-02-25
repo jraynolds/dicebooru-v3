@@ -1,14 +1,21 @@
 <template>
 	<v-card class="mapCard">
-		<v-btn text :disabled="!map?.author?.name" style="width: 100%; height: 50px;" class="mb-1">
+		<v-btn 
+			text 
+			:disabled="!author?.name" 
+			style="width: 100%; height: 50px;" 
+			class="mb-1"
+			color="primary"
+			@click.stop="$emit('headerClick')"
+		>
 			<v-card-title>
-				{{ map?.author?.name || "Unknown Author" }}
+				{{ authorName }}
 			</v-card-title>
 
 			<v-spacer />
 
 			<v-icon width="20" class="align-end" size="x-large">
-				{{ map?.security_level?.icon || 'mdi-lock-question' }}
+				{{ security_level.icon }}
 			</v-icon>
 		</v-btn>
 
@@ -30,7 +37,7 @@
 
 		<v-row class="pl-2 ma-0 mb-n1" style="overflow-y: auto; height: 80px; min-height: 80px;">
 			<TagChip 
-				v-for="mapTag of map.tags" 
+				v-for="mapTag of tags" 
 				:key="mapTag.id" 
 				:tag="mapTag.tag"
 				style="min-width: 'fit-content;'"
@@ -51,9 +58,42 @@ export default {
 
 	components: { TagChip },
 
+	computed: {
+		author() {
+			return this.dataStore.getMapAuthor(this.map);
+		},
+		authorName() {
+			if (!this.author) return "Unknown Author";
+			return this.toUpperCase(this.author.name);
+		},
+		security_level() {
+			if (!this.author) {
+				if (this.map.security_level) return this.map.security_level;
+				return { icon: 'mdi-lock-question' };
+			}
+			else if (this.author) {
+				if (this.map.security_level) return this.map.security_level;
+				if (this.author.default_security_level) return this.author.default_security_level;
+				return { icon: 'mdi-lock-open' };
+			}
+		},
+		tags() {
+			return this.map.tags.sort((t1, t2) => {
+				return t1.tag.type.id - t2.tag.type.id; 
+			});
+		}
+	},
+
 	methods: {
 		toggleFilterTag(tag) {
 			this.filtersStore.toggleIncludedTag(tag);
+		},
+		toUpperCase(str) {
+			const upperStrings = [];
+			for (const s of str.split(" ")) {
+				upperStrings.push(s.charAt(0).toUpperCase() + s.slice(1));
+			}
+			return upperStrings.join(" ");
 		}
 	},
 
