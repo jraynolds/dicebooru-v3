@@ -24,7 +24,7 @@
     "@vitejs/plugin-vue": "^4.0.0",
     "@volar-plugins/vetur": "latest",
     "@vue/cli-plugin-router": "~5.0.0",
-    "supabase": "^1.38.6",
+    "supabase": "^1.38.7",
     "vite": "^4.1.0",
     "vite-plugin-vuetify": "^1.0.2",
     "vue-cli-plugin-vuetify": "~2.5.8"

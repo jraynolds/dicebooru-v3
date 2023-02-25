@@ -19,7 +19,7 @@ security_level (
 src,
 thumb_src,
 purchase_link,
-maps_tags!inner (
+tags:maps_tags (
 	id,
 	tag (
 		id,
@@ -79,7 +79,7 @@ export const useDataStore = defineStore({
 					num_maps
 				`);
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
-			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) console.log(error);
+			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) if (error) console.log(error);
 
 			if (data?.length > 0) this.tags = data;
 		},
@@ -98,7 +98,7 @@ export const useDataStore = defineStore({
 					)
 				`);
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
-			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) console.log(error);
+			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) if (error) console.log(error);
 
 			if (data?.length > 0) this.authors = data;
 		},
@@ -108,16 +108,9 @@ export const useDataStore = defineStore({
 				.from('maps')
 				.select(MAP_SELECT_QUERY);
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
-			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) console.log(error);
+			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) if (error) console.log(error);
 
-			if (data?.length > 0) 
-			{
-				for (let i=0; i<data.length; i++) {
-					data[i].tags = data[i].maps_tags;
-					delete data[i].maps_tags;
-				}
-				this.maps = data;
-			}
+			this.maps = data;
 		},
 		async loadFilteredMaps() {
 			this.loading = true;
@@ -145,7 +138,7 @@ export const useDataStore = defineStore({
 			const { data, error } = await query;
 			
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
-			if (DEBUGS.pinia || DEBUGS.backend) console.log(error || DEBUGS.error);
+			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) if (error) console.log(error);
 
 			if (data.length > 0) {
 				const newMaps = [];
@@ -170,7 +163,7 @@ export const useDataStore = defineStore({
 				.createSignedUrl(map.thumb_src, 600);
 			
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
-			if (DEBUGS.pinia || DEBUGS.backend) console.log(error || DEBUGS.error);
+			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) if (error) console.log(error);
 
 			if (data?.signedUrl) map.thumb_url = data.signedUrl;
 		},
@@ -187,7 +180,7 @@ export const useDataStore = defineStore({
 				.createSignedUrl(map.src, 600);
 			
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
-			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) console.log(error);
+			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) if (error) console.log(error);
 
 			if (data?.signedUrl) map.url = data.signedUrl;
 		},
@@ -223,7 +216,7 @@ export const useDataStore = defineStore({
 				)
 			
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
-			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) console.log(error);
+			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) if (error) console.log(error);
 
 		},
 		async resizeImage(image) {
@@ -247,7 +240,7 @@ export const useDataStore = defineStore({
 				resized = result;
 			}).catch((err) => {
 				if (DEBUGS.pinia || DEBUGS.error) console.log("Couldn't resize!");
-				if (DEBUGS.pinia || DEBUGS.error) console.log(err);
+				if (DEBUGS.pinia || DEBUGS.error) if (err) console.log(err);
 			});
 
 			if (DEBUGS.pinia) console.log(resized);

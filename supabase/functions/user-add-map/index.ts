@@ -169,8 +169,11 @@ serve(async (req) => {
 			.insert([{
 				uploader: user.id,
 				src: imageName,
-				thumb_src: thumbName
-		}]);
+				thumb_src: thumbName,
+				author: author
+			}])
+			.select();
+		console.log("We got to the map step.");
 		console.log(mapData);
 		if (mapError) {
 			console.error(mapError);
@@ -178,9 +181,11 @@ serve(async (req) => {
 		}
 
 		const split_tags = tags.split(',');
+		console.log(split_tags);
 		if (split_tags.length > 0) {
 			const map_tags = [];
-			for (const split_tag of split_tags) map_tags.push({ map: mapData.id, tag: split_tag });
+			for (const split_tag of split_tags) map_tags.push({ map: mapData[0].id, tag: split_tag });
+			console.log(map_tags);
 			const { data: mapTagsData, error: mapTagsError } = await supabaseClient
 				.from('maps_tags')
 				.insert(map_tags);
