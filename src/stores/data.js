@@ -35,6 +35,8 @@ tags:maps_tags (
 )
 `;
 
+const CHUNK_SIZE = 20;
+
 export const useDataStore = defineStore({
 	id: 'data',
 	state: () => ({
@@ -53,9 +55,12 @@ export const useDataStore = defineStore({
 		getUploadStage: (state) => state.uploadStage
 	},
 	actions: {
-		getMapAuthor (map) {
+		getMapAuthor(map) {
 			if (!map?.author) return null;
 			return this.getAuthors.find(a => a.id === map.author);
+		},
+		setTags(tags) {
+			this.tags = tags.sort((t1, t2) => t1.type.id - t2.type.id);
 		},
 		async initialLoad() {
 			if (DEBUGS.pinia || DEBUGS.backend) console.log("Performing initial load.");
@@ -77,6 +82,7 @@ export const useDataStore = defineStore({
 					name,
 					description,
 					type:tagtypes (
+						id,
 						name,
 						description,
 						icon
@@ -86,7 +92,7 @@ export const useDataStore = defineStore({
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
 			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) if (error) console.log(error);
 
-			if (data?.length > 0) this.tags = data;
+			if (data?.length > 0) this.setTags(data);
 		},
 		async loadAuthors() {
 			if (DEBUGS.pinia || DEBUGS.backend) console.log("Getting authors.");
@@ -127,7 +133,7 @@ export const useDataStore = defineStore({
 			if (includedTags?.length == 0 && excludedTags.length == 0 && !author) return this.loadMaps();
 
 			let query = supabase
-				.from('maps_tags_grouped_by_map')
+				.from('maps_tags_grouped')
 				.select(`
 					map(
 						${MAP_SELECT_QUERY}
@@ -139,7 +145,8 @@ export const useDataStore = defineStore({
 				query = query.not('tags', 'cs', excludedTagObject);
 			}
 			if (author) query = query.eq('author', author.id);
-			
+
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(query);
 			const { data, error } = await query;
 			
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
@@ -208,7 +215,7 @@ export const useDataStore = defineStore({
 			const payload = new FormData();
 			payload.append('image', file);
 			payload.append('thumb', thumbFile);
-			payload.append('author', author.id);
+			if (author?.id) payload.append('author', author.id);
 			payload.append('tags', tags.map(t => t.id).join(","));
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(...payload);
 			const { data, error } = await supabase
@@ -223,6 +230,7 @@ export const useDataStore = defineStore({
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
 			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) if (error) console.log(error);
 
+			return { data, error }
 		},
 		async resizeImage(image) {
 			if (DEBUGS.pinia) console.log("Resizing this image:");

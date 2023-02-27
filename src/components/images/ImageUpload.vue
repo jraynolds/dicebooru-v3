@@ -1,7 +1,33 @@
 <template>
+	<v-snackbar v-model="successSnackbar">
+		The map was successfully uploaded!
+		<template v-slot:actions>
+				<v-btn
+					color="primary"
+					variant="text"
+					@click="successSnackbar = false"
+				>
+					Close
+				</v-btn>
+			</template>
+	</v-snackbar>
+	<v-snackbar v-model="errorSnackbar">
+		{{ errorMessage }}
+		<template v-slot:actions>
+				<v-btn
+					color="primary"
+					variant="text"
+					@click="errorSnackbar = false"
+				>
+					Close
+				</v-btn>
+			</template>
+	</v-snackbar>
+
 	<v-dialog
 		v-model="open"
 		width="600"
+		:persistent="uploadingMap"
 	>
 		<template v-slot:activator="{ props }">
 			<v-fab-transition>
@@ -53,7 +79,7 @@
 				variant="underlined"
 			/>
 			
-			<v-select
+			<v-autocomplete
 				class="px-4"
 				bg-color="primary"
 				prepend-inner-icon="mdi-account"
@@ -104,17 +130,37 @@ export default {
 
 	computed: {
 		uploadable() {
+			if (this.uploadingMap) return false;
 			return this.image != null;
 		},
+		errorMessage() {
+			return this.error;
+		}
 	},
 
 	methods: {
 		createURLFromFile(file) {
 			return URL.createObjectURL(file);
 		},
-		upload() {
-			this.dataStore.uploadMap(this.image, this.uploadAuthor, this.uploadTags);
+		async upload() {
+			this.uploadingMap = true;
+			const { data, error } = await this.dataStore.uploadMap(this.image, this.uploadAuthor, this.uploadTags);
+			if (error) this.errorSnackbar = true;
+			else this.successSnackbar = true;
+
+			this.reset();
+			this.dataStore.loadFilteredMaps();
 		},
+		reset() {
+			this.open = false;
+			this.uploadTags = [];
+			this.uploadAuthor = null;
+			this.storingImage = false;
+			this.uploadingMap = false;
+			this.imageArr = [];
+			this.image = null;
+			this.url = null;
+		}
 		// test(selections) {
 		// 	this.uploadTags = selections;
 		// }
@@ -146,6 +192,9 @@ export default {
 		const image = ref(null);
 		const url = ref(null);
 
+		const successSnackbar = ref(false);
+		const errorSnackbar = ref(false);
+
 		return {
 			authStore,
 			dataStore,
@@ -157,7 +206,10 @@ export default {
 			uploadingMap,
 			imageArr,
 			image,
-			url
+			url,
+
+			successSnackbar,
+			errorSnackbar
 		}
 	}
 

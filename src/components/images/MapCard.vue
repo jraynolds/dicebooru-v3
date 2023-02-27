@@ -35,13 +35,13 @@
 			</template>
 		</v-img>
 
-		<v-row class="pl-2 ma-0 mb-n1" style="overflow-y: auto; height: 80px; min-height: 80px;">
+		<v-row class="pl-2 ma-0" style="overflow-y: auto; height: 80px; min-height: 80px;">
 			<TagChip 
 				v-for="mapTag of tags" 
 				:key="mapTag.id" 
 				:tag="mapTag.tag"
 				style="min-width: 'fit-content;'"
-				@click="toggleFilterTag(mapTag.tag)"
+				@click.stop="$emit('tagClick', mapTag.tag)"
 				class="mb-1 mr-1"
 			/>
 		</v-row>
@@ -85,9 +85,6 @@ export default {
 	},
 
 	methods: {
-		toggleFilterTag(tag) {
-			this.filtersStore.toggleIncludedTag(tag);
-		},
 		toUpperCase(str) {
 			const upperStrings = [];
 			for (const s of str.split(" ")) {

@@ -106,7 +106,7 @@ serve(async (req) => {
 
 		const image: FormFile = form.files.image as FormFile;
 		const thumb: FormFile = form.files.thumb as FormFile;
-		const author: string = form.fields.author as string;
+		const author: string = form.fields?.author as string || null;
 		const tags: string = form.fields.tags as string;
 
 		const {
@@ -164,14 +164,15 @@ serve(async (req) => {
 			throw(thumbError);
 		}
 
+		const mapObject = {
+			uploader: user.id,
+			src: imageName,
+			thumb_src: thumbName
+		};
+		if (author) mapObject.author = author;
 		const { data: mapData, error: mapError } = await supabaseClient
 			.from('maps')
-			.insert([{
-				uploader: user.id,
-				src: imageName,
-				thumb_src: thumbName,
-				author: author
-			}])
+			.insert([mapObject])
 			.select();
 		console.log("We got to the map step.");
 		console.log(mapData);
@@ -196,7 +197,7 @@ serve(async (req) => {
 			}
 		}
 
-		return new Response(JSON.stringify({ mapIDsuccess: true, error: null}), {
+		return new Response(JSON.stringify({ mapID: mapData[0].id, success: true, error: null}), {
 			headers: {...corsHeaders, 'Content-Type': 'application/json'},
 			status: 200
 		});

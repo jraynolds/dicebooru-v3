@@ -6,7 +6,7 @@
 	<v-container style="min-height: 100%;">
 		<v-row>
 			<v-col>
-				<v-select
+				<v-autocomplete
 					class="px-4"
 					bg-color="primary"
 					prepend-inner-icon="mdi-account"
@@ -62,7 +62,8 @@
 			>
 				<MapCard  
 					:map="map"
-					@click="selectMap(map)" 
+					@click="selectMap(map)"
+					@tagClick="toggleFilterTag"
 					height="400" 
 					width="300" 
 				/>
@@ -112,6 +113,9 @@ export default {
 		},
 		setSelectedIncludedTags(val) { this.filtersStore.setIncludedTags(val); },
 		setSelectedExcludedTags(val) { this.filtersStore.setExcludedTags(val); },
+		toggleFilterTag(tag) {
+			this.filtersStore.toggleIncludedTag(tag);
+		}
 	},
 
 	mounted() {
