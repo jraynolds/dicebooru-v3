@@ -118,6 +118,7 @@ export default {
 	},
 
 	mounted() {
+		console.log("mounting!");
 		this.dataStore.initialLoad();
 	},
 

@@ -15,6 +15,7 @@
     "@vueuse/core": "^9.13.0",
     "compressorjs": "^1.1.1",
     "pinia": "^2.0.30",
+    "pinia-plugin-persistedstate": "^3.1.0",
     "roboto-fontface": "*",
     "uuid": "^9.0.0",
     "vue": "^3.2.45",

@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { useStorage } from "@vueuse/core"
 import supabase from '@/plugins/supabase';
 import DEBUGS from '@/plugins/debug';
 
@@ -9,6 +10,7 @@ export const useAuthStore = defineStore({
 		session: null,
 		loginPanelOpen: false
 	}),
+  persist: true,
 	getters: {
 		getUser: (state) => state.user,
 		getSession: (state) => state.session,
