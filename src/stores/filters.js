@@ -40,6 +40,13 @@ export const useFiltersStore = defineStore({
 			if (DEBUGS.pinia || DEBUGS.filters) console.log("Changing our filtering author to:");
 			if (DEBUGS.pinia || DEBUGS.filters) console.log(author);
 			this.author = author;
-		}
+		},
+		toggleAuthor(author) {
+			if (DEBUGS.pinia || DEBUGS.filters) console.log("Toggling this filtering author:");
+			if (DEBUGS.pinia || DEBUGS.filters) console.log(author);
+			
+			if (this.getAuthor && this.getAuthor == author) this.author = null;
+			else this.author = author;
+		},
 	}
 })

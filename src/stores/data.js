@@ -123,6 +123,38 @@ export const useDataStore = defineStore({
 
 			this.maps = data;
 		},
+		async loadMap(id) {
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(`Loading a single map with id ${id}.`);
+			
+			const { data, error } = await supabase
+				.from('maps')
+				.select(MAP_SELECT_QUERY)
+				.eq('id', id);
+			
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
+			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) if (error) console.log(error);
+			if (error) return { data, error };
+
+			const i = this.maps.indexOf(this.maps.find(m => m.id === id));
+			if (i >= 0) {
+				Object.assign(this.maps[i], data[0]);
+			}
+			else this.maps.push(data[0]);
+			// const i = this.maps.indexOf(this.maps.find(m => m.id == id));
+			// if (i > 0) {
+			// 	this.maps[i].uploader = data[0].uploader;
+			// 	this.maps[i].author = data[0].author;
+			// 	this.maps[i].security_level = data[0].security_level;
+			// 	this.maps[i].src = data[0].src;
+			// 	this.maps[i].thumb_src = data[0].thumb_src;
+			// 	this.maps[i].purchase_link = data[0].purchase_link;
+			// 	this.maps[i].tags = [];
+			// 	for (const tag of data[0].tags) tags.push({ id: null, tag });
+			// }
+			// else this.maps[i] = data[0];
+
+			return { data, error };
+		},
 		async loadFilteredMaps() {
 			this.loading = true;
 			if (DEBUGS.pinia || DEBUGS.backend) console.log("Getting filtered maps.");
@@ -259,6 +291,22 @@ export const useDataStore = defineStore({
 			if (DEBUGS.pinia) console.log(resized);
 
 			return resized;
-		}
+		},
+		async addTags(map, tags) {
+			if (DEBUGS.pinia || DEBUGS.backend) console.log("Adding tags to an existing map.");
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(map);
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(tags);
+
+			const map_tags = [];
+			for (const tag of tags) map_tags.push({ map: map.id, tag: tag.id });
+			const { data, error } = await supabase
+				.from('maps_tags')
+				.insert(map_tags);
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
+			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) if (error) console.log(error);
+			if (error) return { data, error };
+
+			return await this.loadMap(map.id);
+		} 
 	}
 })

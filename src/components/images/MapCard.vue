@@ -1,5 +1,30 @@
 <template>
-	<v-card class="mapCard">
+	<v-card class="mapCard" ref="card">
+		<v-snackbar v-model="tagSuccessSnackbar" v-if="large">
+			Tags successfully added!
+			<template v-slot:actions>
+					<v-btn
+						color="primary"
+						variant="text"
+						@click="tagSuccessSnackbar = false"
+					>
+						Close
+					</v-btn>
+				</template>
+		</v-snackbar>
+		<v-snackbar v-model="tagErrorSnackbar" v-if="large">
+			Unknown error.
+			<template v-slot:actions>
+					<v-btn
+						color="primary"
+						variant="text"
+						@click="tagErrorSnackbar = false"
+					>
+						Close
+					</v-btn>
+				</template>
+		</v-snackbar>
+
 		<v-btn 
 			text 
 			:disabled="!author?.name" 
@@ -38,12 +63,49 @@
 		<v-row class="pl-2 ma-0" style="overflow-y: auto; height: 80px; min-height: 80px;">
 			<TagChip 
 				v-for="mapTag of tags" 
-				:key="mapTag.id" 
+				:key="mapTag.tag.id" 
 				:tag="mapTag.tag"
-				style="min-width: 'fit-content;'"
+				style="min-width: 'fit-content'"
 				@click.stop="$emit('tagClick', mapTag.tag)"
 				class="mb-1 mr-1"
 			/>
+			<v-dialog
+				v-model="addTagDialog"
+				width="500"
+				v-if="large"
+				:persistent="uploadingTags"
+			>
+				<template v-slot:activator="{ props }">
+					<v-chip 
+						color="primary"
+						v-bind="props"
+					>
+						+
+					</v-chip>
+				</template>
+
+				<v-card>
+					<v-card-title>Add additional tags:</v-card-title>
+					<SearchBar
+						class="px-4"
+						bg-color="primary"
+						prepend-inner-icon="mdi-tag" 
+						:items="addableTags"
+						:selections="addedTags"
+						@update:selections="addedTags = $event"
+						label="Map should have these tags:"
+					/>
+					<v-card-actions>
+						<v-spacer />
+						<v-btn variant="flat" color="primary" @click="addTags">
+							<template v-slot:append v-if="uploadingTags">
+								<v-progress-circular indeterminate size="small" />
+							</template>
+							Add tags
+						</v-btn>
+					</v-card-actions>
+				</v-card>
+			</v-dialog>
 		</v-row>
 	</v-card>
 </template>
@@ -51,12 +113,18 @@
 <script>
 import { useDataStore } from '@/stores/data';
 import { useFiltersStore } from '@/stores/filters';
+import { toUpperCase } from '@/scripts/extensions'
+import { useElementVisibility } from '@vueuse/core'
+
+import { ref } from 'vue'
 
 import TagChip from '@/components/images/TagChip.vue'
+import SearchBar from '@/components/search/SearchBar.vue'
+
 export default {
 	props: [ "map", "large" ],
 
-	components: { TagChip },
+	components: { TagChip, SearchBar },
 
 	computed: {
 		author() {
@@ -81,36 +149,74 @@ export default {
 			return this.map.tags.sort((t1, t2) => {
 				return t1.tag.type.id - t2.tag.type.id; 
 			});
+		},
+		addableTags() {
+			const tagIDs = this.tags.map(t => t.tag.id);
+			return this.dataStore.tags.filter(t => !tagIDs.includes(t.id));
 		}
 	},
 
 	methods: {
-		toUpperCase(str) {
-			const upperStrings = [];
-			for (const s of str.split(" ")) {
-				upperStrings.push(s.charAt(0).toUpperCase() + s.slice(1));
-			}
-			return upperStrings.join(" ");
-		}
+		async addTags() {
+			this.uploadingTags = true;
+
+			const { data, error } = await this.dataStore.addTags(this.map, this.addedTags);
+			if (data) this.tagSuccessSnackbar = true;
+			else this.tagErrorSnackbar = true;
+
+			this.uploadingTags = false;
+			this.addedTags = [];
+			this.addTagDialog = false;
+		},
+		initialLoad() {
+			if (!this.map.thumb_url) this.dataStore.loadThumbURL(this.map.id);
+		},
 	},
 
 	watch: {
 		map() {
 			if (!this.map.thumb_url) this.dataStore.loadThumbURL(this.map.id);
+		},
+		isVisible(val) {
+			if (!this.hasLoaded && val) {
+				this.hasLoaded = true;
+				this.initialLoad();
+			}
 		}
-	},
-
-	mounted() {
-		if (!this.map.thumb_url) this.dataStore.loadThumbURL(this.map.id);
 	},
 
 	setup() {
 		const dataStore = useDataStore();
 		const filtersStore = useFiltersStore();
 
+		const hasLoaded = ref(false);
+
+		const addTagDialog = ref(false);
+		const addedTags = ref([]);
+		const uploadingTags = ref(false);
+
+		const tagSuccessSnackbar = ref(false);
+		const tagErrorSnackbar = ref(false);
+
+		const card = ref(null);
+		const isVisible = useElementVisibility(card);
+
 		return {
 			dataStore,
-			filtersStore
+			filtersStore,
+			toUpperCase,
+
+			isVisible,
+			hasLoaded,
+
+			addTagDialog,
+			addedTags,
+			uploadingTags,
+
+			tagSuccessSnackbar,
+			tagErrorSnackbar,
+
+			card
 		}
 	}
 }

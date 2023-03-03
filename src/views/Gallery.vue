@@ -6,15 +6,13 @@
 	<v-container style="min-height: 100%;">
 		<v-row>
 			<v-col>
-				<v-autocomplete
-					class="px-4"
-					bg-color="primary"
-					prepend-inner-icon="mdi-account"
-					:items="dataStore.getAuthors"
-					v-model="author"
+				<AuthorFilterBar 
+					bg-color="primary" 
+					prepend-inner-icon="mdi-account" 
+					:items="dataStore.getAuthors" 
+					:selection="filtersStore.getAuthor"
+					@update:selection="filtersStore.setAuthor"
 					label="Filter by an author:"
-					item-title="name"
-					return-object
 				/>
 			</v-col>
 			<v-col>
@@ -22,8 +20,8 @@
 					bg-color="success" 
 					prepend-inner-icon="mdi-tag" 
 					:items="availableIncludedTags" 
-					:selections="selectedIncludedTags"
-					@update:selections="setSelectedIncludedTags"
+					:selections="filtersStore.getIncludedTags"
+					@update:selections="filtersStore.setIncludedTags"
 					label="Include these tags:"
 					:displayCount="true"
 				/>
@@ -33,8 +31,8 @@
 					bg-color="error" 
 					prepend-inner-icon="mdi-tag-off" 
 					:items="availableExcludedTags" 
-					:selections="selectedExcludedTags"
-					@update:selections="setSelectedExcludedTags"
+					:selections="filtersStore.getExcludedTags"
+					@update:selections="filtersStore.setExcludedTags"
 					label="Exclude these tags:"
 					:displayCount="true"
 				/>
@@ -64,6 +62,7 @@
 					:map="map"
 					@click="selectMap(map)"
 					@tagClick="toggleFilterTag"
+					@headerClick="toggleFilterAuthor(map.author)"
 					height="400" 
 					width="300" 
 				/>
@@ -78,20 +77,19 @@ import { ref } from 'vue';
 import SearchBar from '@/components/search/SearchBar.vue';
 import MapCard from '@/components/images/MapCard.vue';
 import ImageUpload from '@/components/images/ImageUpload.vue';
+import MapPopup from '@/components/images/MapPopup.vue';
+import AuthorFilterBar from '@/components/search/AuthorFilterBar.vue';
 
 import { useDataStore } from '@/stores/data';
 import { useAuthStore } from '@/stores/auth';
 import { useFiltersStore } from '@/stores/filters';
-import MapPopup from '@/components/images/MapPopup.vue';
 
 export default {
-	components: { SearchBar, MapCard, ImageUpload, MapPopup },
+	components: { SearchBar, MapCard, ImageUpload, MapPopup, AuthorFilterBar },
 
 	computed: {
 		availableIncludedTags() { return this.dataStore.getTags.filter(t => !this.filtersStore.getExcludedTags.includes(t)); },
-		selectedIncludedTags() { return this.filtersStore.getIncludedTags; },
 		availableExcludedTags() { return this.dataStore.getTags.filter(t => !this.filtersStore.getIncludedTags.includes(t)); },
-		selectedExcludedTags() { return this.filtersStore.getExcludedTags; },
 		author: {
 			get() { return this.filtersStore.getAuthor; },
 			set(val) { return this.filtersStore.setAuthor(val); },
@@ -111,10 +109,11 @@ export default {
 		setPopupOpen(val) {
 			this.popupOpen = val;
 		},
-		setSelectedIncludedTags(val) { this.filtersStore.setIncludedTags(val); },
-		setSelectedExcludedTags(val) { this.filtersStore.setExcludedTags(val); },
 		toggleFilterTag(tag) {
 			this.filtersStore.toggleIncludedTag(tag);
+		},
+		toggleFilterAuthor(author) {
+			this.filtersStore.toggleAuthor(this.dataStore.authors.find(a => a.id === author));
 		}
 	},
 
