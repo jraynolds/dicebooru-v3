@@ -219,7 +219,6 @@ export const useDataStore = defineStore({
 			const includedTags = filtersStore.getIncludedTags;
 			const excludedTags = filtersStore.getExcludedTags;
 			const author = filtersStore.getAuthor;
-			if (includedTags?.length == 0 && excludedTags.length == 0 && !author) return this.loadMaps();
 
 			let query = supabase
 				.from('maps_tags_grouped')
