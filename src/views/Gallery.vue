@@ -1,58 +1,13 @@
 <template>
+	<Sidebar />
+
 	<ImageUpload />
 
 	<MapPopup :open="popupOpen" @update:open="setPopupOpen" :map="popupMap" />
 
 	<v-container style="min-height: 100%;">
-		<v-row>
-			<v-col>
-				<AuthorFilterBar 
-					bg-color="primary" 
-					prepend-inner-icon="mdi-account" 
-					:items="dataStore.getAuthors" 
-					:selection="filtersStore.getAuthor"
-					@update:selection="filtersStore.setAuthor"
-					label="Filter by an author:"
-				/>
-			</v-col>
-			<v-col>
-				<SearchBar 
-					bg-color="success" 
-					prepend-inner-icon="mdi-tag" 
-					:items="availableIncludedTags" 
-					:selections="filtersStore.getIncludedTags"
-					@update:selections="filtersStore.setIncludedTags"
-					label="Include these tags:"
-					:displayCount="true"
-				/>
-			</v-col>
-			<v-col>
-				<SearchBar 
-					bg-color="error" 
-					prepend-inner-icon="mdi-tag-off" 
-					:items="availableExcludedTags" 
-					:selections="filtersStore.getExcludedTags"
-					@update:selections="filtersStore.setExcludedTags"
-					label="Exclude these tags:"
-					:displayCount="true"
-				/>
-			</v-col>
-		</v-row>
 
-		<v-row class="mx-8 mt-n6 mb-8">
-			<v-btn 
-				color="primary" 
-				class="fill-width" 
-				style="width: 100%;"
-				:disabled="searching"
-				@click="search"
-			>
-				<v-progress-circular indeterminate v-show="searching" />
-				Search
-			</v-btn>
-		</v-row>
-
-		<v-row class="justify-center align-center d-flex">
+		<v-row class="justify-center align-center d-flex" ref="scroller">
 			<v-col
 				class="d-flex align-center justify-center"
 				v-for="map in dataStore.getMaps" 
@@ -68,40 +23,34 @@
 				/>
 			</v-col>
 		</v-row>
+
+		<v-col class="justify-center align-center d-flex" style="width: 100%; text-align: center; height: 100px;">
+			<v-progress-circular indeterminate size="small" v-if="moreMapsExist" />
+			{{ moreMapsExist ? '&nbsp;Loading More...' : 'All maps loaded!' }}
+		</v-col>
 	</v-container>
 </template>
 
 <script>
 import { ref } from 'vue';
+import { useInfiniteScroll } from '@vueuse/core'
 
-import SearchBar from '@/components/search/SearchBar.vue';
+import Sidebar from '@/components/framework/Sidebar.vue';
 import MapCard from '@/components/images/MapCard.vue';
 import ImageUpload from '@/components/images/ImageUpload.vue';
 import MapPopup from '@/components/images/MapPopup.vue';
-import AuthorFilterBar from '@/components/search/AuthorFilterBar.vue';
 
 import { useDataStore } from '@/stores/data';
-import { useAuthStore } from '@/stores/auth';
 import { useFiltersStore } from '@/stores/filters';
 
 export default {
-	components: { SearchBar, MapCard, ImageUpload, MapPopup, AuthorFilterBar },
+	components: { Sidebar, MapCard, ImageUpload, MapPopup },
 
 	computed: {
-		availableIncludedTags() { return this.dataStore.getTags.filter(t => !this.filtersStore.getExcludedTags.includes(t)); },
-		availableExcludedTags() { return this.dataStore.getTags.filter(t => !this.filtersStore.getIncludedTags.includes(t)); },
-		author: {
-			get() { return this.filtersStore.getAuthor; },
-			set(val) { return this.filtersStore.setAuthor(val); },
-		}
+		moreMapsExist() { return this.dataStore.moreMapsExist; }
 	},
 
 	methods: {
-		async search() {
-			this.searching = true;
-			await this.dataStore.loadFilteredMaps();
-			this.searching = false;
-		},
 		selectMap(map) {
 			this.popupMap = map;
 			this.popupOpen = true;
@@ -125,22 +74,28 @@ export default {
 	setup() {
 		const dataStore = useDataStore();
 		const filtersStore = useFiltersStore();
-		const authStore = useAuthStore();
-
-		const searching = ref(false);
 
 		const popupOpen = ref(false);
 		const popupMap = ref(null);
 
+		const scroller = ref(null);
+
+		useInfiniteScroll(
+			scroller,
+			() => {
+				console.log("Scrolled");
+			},
+			{ distance: 10 }
+		)
+
 		return {
 			dataStore,
 			filtersStore,
-			authStore,
-
-			searching,
 
 			popupOpen,
-			popupMap
+			popupMap,
+			
+			scroller,
 		}
 	}
 }

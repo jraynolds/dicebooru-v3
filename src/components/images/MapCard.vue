@@ -146,7 +146,7 @@ export default {
 			}
 		},
 		tags() {
-			return this.map.tags.sort((t1, t2) => {
+			return this.map?.tags?.sort((t1, t2) => {
 				return t1.tag.type.id - t2.tag.type.id; 
 			});
 		},
@@ -169,16 +169,16 @@ export default {
 			this.addTagDialog = false;
 		},
 		initialLoad() {
-			if (!this.map.thumb_url) this.dataStore.loadThumbURL(this.map.id);
+			this.dataStore.loadThumbURL(this.map.id);
 		},
 	},
 
 	watch: {
 		map() {
-			if (!this.map.thumb_url) this.dataStore.loadThumbURL(this.map.id);
+			this.initialLoad();
 		},
 		isVisible(val) {
-			if (!this.hasLoaded && val) {
+			if (!this.hasLoaded && val && this.map) {
 				this.hasLoaded = true;
 				this.initialLoad();
 			}

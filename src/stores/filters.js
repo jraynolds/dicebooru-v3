@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { useDataStore } from "@/stores/data"
 import DEBUGS from '@/plugins/debug';
 
 export const useFiltersStore = defineStore({
@@ -10,7 +11,9 @@ export const useFiltersStore = defineStore({
 	}),
 	getters: {
 		getIncludedTags: (state) => state.includedTags,
+		getIncludableTags: (state) => useDataStore().getTags.filter(t => !state.excludedTags.includes(t)),
 		getExcludedTags: (state) => state.excludedTags,
+		getExcludableTags: (state) => useDataStore().getTags.filter(t => !state.includedTags.includes(t)),
 		getAuthor: (state) => state.author,
 	},
 	actions: {

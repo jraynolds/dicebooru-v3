@@ -36,11 +36,13 @@ tags:maps_tags (
 )
 `;
 
-const CHUNK_SIZE = 20;
+const CHUNK_SIZE = 6;
+const IMAGE_PERSISTENCE_SECONDS = 3600;
 
 export const useDataStore = defineStore({
 	id: 'data',
 	state: () => ({
+		statistics: [],
 		tags: [],
 		authors: [],
 		maps: [],
@@ -48,7 +50,8 @@ export const useDataStore = defineStore({
 		uploadStage: 0,
 		lastTagsReadDate: null,
 		lastAuthorsReadDate: null,
-		lastMapsReadDate: null
+		lastMapsReadDate: null,
+		mapChunkStart: 0
 	}),
   persist: true,
 	getters: {
@@ -57,9 +60,18 @@ export const useDataStore = defineStore({
 		getMaps: (state) => state.maps,
 		isLoading: (state) => state.loading,
 		isUploading: (state) => state.uploadStage != 0,
-		getUploadStage: (state) => state.uploadStage
+		getUploadStage: (state) => state.uploadStage,
+		moreMapsExist: (state) => state?.statistics?.find(s => s.key == 'num_maps')?.num_value > state.mapChunkStart
 	},
 	actions: {
+		newQuery() {
+			this.resetMapChunk();
+			this.maps = [];
+			this.loadFilteredMaps();
+		},
+		resetMapChunk() {
+			this.mapChunkStart = 0;
+		},
 		getMapAuthor(map) {
 			if (!map?.author) return null;
 			return this.getAuthors.find(a => a.id === map.author);
@@ -71,12 +83,38 @@ export const useDataStore = defineStore({
 			if (DEBUGS.pinia || DEBUGS.backend) console.log("Performing initial load.");
 			this.loading = true;
 			const promises = [
+				this.loadStatistics(),
 				this.loadTags(),
 				this.loadAuthors(),
 				this.loadMaps()
 			]
 			await Promise.all(promises);
 			this.loading = false;
+		},
+		async loadStatistics() {
+			if (DEBUGS.pinia || DEBUGS.backend) console.log("Getting statistics.");
+
+			const date = new Date().toISOString();
+			let query = supabase
+				.from('statistics')
+				.select(`
+					id,
+					key,
+					text_value,
+					num_value,
+					bool_value,
+					date_value,
+					uuid_value
+				`);
+			const { data, error } = await query;
+
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
+			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) if (error) console.log(error);
+			if (error) return { data, error };
+			
+			this.statistics = data;
+					
+			return { data, error }
 		},
 		async loadTags() {
 			if (DEBUGS.pinia || DEBUGS.backend) console.log("Getting tags.");
@@ -168,7 +206,9 @@ export const useDataStore = defineStore({
 			const date = new Date().toISOString();
 			let query = supabase
 				.from('maps')
-				.select(MAP_SELECT_QUERY);
+				.select(MAP_SELECT_QUERY)
+				.order('updated_at', { ascending: false })
+				.range(this.mapChunkStart, this.mapChunkStart + CHUNK_SIZE);
 			if (this.lastMapsReadDate) query = query.gte('updated_at', this.lastMapsReadDate);
 			const { data, error } = await query;
 
@@ -176,6 +216,8 @@ export const useDataStore = defineStore({
 			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) if (error) console.log(error);
 			if (error) return { data, error };
 			this.lastMapsReadDate = date;
+
+			this.mapChunkStart += CHUNK_SIZE;
 
 			let isPresent = false;
 			const additions = [];
@@ -227,6 +269,7 @@ export const useDataStore = defineStore({
 						${MAP_SELECT_QUERY}
 					)
 				`)
+				.range(this.mapChunkStart, this.mapChunkStart + CHUNK_SIZE);
 			if (includedTags?.length > 0) query = query.contains('tags', includedTags.map(t => t.id));
 			if (excludedTags?.length > 0) {
 				const excludedTagObject = `{${(excludedTags.map(t => `"${t.id}"`)).join("','")}}`;
@@ -239,21 +282,31 @@ export const useDataStore = defineStore({
 			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) if (error) console.log(error);
 			if (error) return { data, error };
 
-			if (data.length > 0) {
-				const newMaps = [];
-				for (let m of data) newMaps.push(m.map);
-				this.maps = newMaps;
-			} else {
-				this.maps = [];
+			this.mapChunkStart += CHUNK_SIZE;
+
+			let isPresent = false;
+			const additions = [];
+			for (let i=0; i<data.length; i++) {
+				isPresent = false;
+				for (let j=0; j<this.maps.length; j++) {
+					if (data[i].id == this.maps[j].id) {
+						Object.assign(this.maps[j], data[i]);
+						isPresent = true;
+						break;
+					}
+				}
+				if (!isPresent) additions.push(data[i]);
 			}
+			for (const map of additions) this.maps.push(map);
 
 			this.loading = false;
 
 			return { data, error };
 		},
 		async loadThumbURL(mapID) {
-			if (DEBUGS.pinia || DEBUGS.backend) console.log(`Loading a thumb URL for map ${mapID}`);
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(`Potentially loading a thumb URL for map ${mapID}`);
 			const map = this.maps.find(m => m.id === mapID);
+			if (map.thumb_url && Date.now() - map.thumb_fetched < IMAGE_PERSISTENCE_SECONDS * 10) return;
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(map);
 			if (!map) return;
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(`Loading image at URL ${map.thumb_src}`);
@@ -261,18 +314,24 @@ export const useDataStore = defineStore({
 			const { data, error } = await supabase
 				.storage
 				.from('thumbs')
-				.createSignedUrl(map.thumb_src, 600);
+				.createSignedUrl(map.thumb_src, 3600);
 			
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
 			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) if (error) console.log(error);
+			if (error) return { data, error };
 
-			if (data?.signedUrl) map.thumb_url = data.signedUrl;
+			const now = Date.now();
+			if (data?.signedUrl) {
+				map.thumb_url = data.signedUrl;
+				map.thumb_fetched = now;
+			}
 
 			return { data, error };
 		},
 		async loadURL(mapID) {
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(`Loading a URL for map ${mapID}`);
 			const map = this.maps.find(m => m.id === mapID);
+			if (map.url && Date.now() - map.image_fetched < IMAGE_PERSISTENCE_SECONDS * 10) return;
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(map);
 			if (!map) return;
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(`Loading image at URL ${map.src}`);
@@ -280,12 +339,17 @@ export const useDataStore = defineStore({
 			const { data, error } = await supabase
 				.storage
 				.from('maps')
-				.createSignedUrl(map.src, 600);
+				.createSignedUrl(map.src, 3600);
 			
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
 			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) if (error) console.log(error);
+			if (error) return { data, error };
 
-			if (data?.signedUrl) map.url = data.signedUrl;
+			const now = Date.now();
+			if (data?.signedUrl) {
+				map.url = data.signedUrl;
+				map.image_fetched = now;
+			}
 
 			return { data, error };
 		},
