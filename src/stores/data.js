@@ -76,8 +76,12 @@ export const useDataStore = defineStore({
 			if (!map?.author) return null;
 			return this.getAuthors.find(a => a.id === map.author);
 		},
-		setTags(tags) {
-			this.tags = tags.sort((t1, t2) => t1.type.id - t2.type.id);
+		orderTags() {
+			this.tags = this.tags.sort((t1, t2) => {
+				if (t1.type.id < t2.type.id) return -1;
+				if (t1.type.id == t2.type.id) return t2.num_maps - t1.num_maps;
+				if (t1.type.id > t2.type.id) return 1;
+			});
 		},
 		async initialLoad() {
 			if (DEBUGS.pinia || DEBUGS.backend) console.log("Performing initial load.");
@@ -156,6 +160,8 @@ export const useDataStore = defineStore({
 				if (!isPresent) additions.push(data[i]);
 			}
 			for (const tag of additions) this.tags.push(tag);
+
+			this.orderTags();
 					
 			return { data, error }
 		},

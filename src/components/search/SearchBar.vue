@@ -4,7 +4,7 @@
 		:items="items"
 		:label="label" 
 		:prepend-icon="icon"
-		:color="color" 
+		:color="color"
 		chips
 		closable-chips
 		multiple
@@ -15,6 +15,12 @@
 	>
 		<template v-slot:chip="{ props, item }">
 			<v-chip
+				v-if="simpleDisplay"
+				v-bind="props"
+				:text="item.raw.name"
+			/>
+			<v-chip
+				v-else
 				v-bind="props"
 				:prepend-icon="item.raw.type.icon"
 				:text="item.raw.name"
@@ -22,6 +28,18 @@
 		</template>
 		<template v-slot:item="{ props, item }">
 			<v-list-item
+				v-if="simpleDisplay"
+				v-bind="props"
+			>
+				<template v-slot:title>
+					{{ item.title.substring(0, 1).toUpperCase() + item.title.substring(1) }}
+					<em style="font-size: x-small; color: gray;">
+						<span v-if="displayCount">{{ `${item.value.num_maps} image${item.value.num_maps > 1 ? 's' : ''}` }}</span>
+					</em>
+				</template>
+			</v-list-item>
+			<v-list-item
+				v-else
 				v-bind="props"
 				:prepend-icon="item?.raw?.type?.icon"
 				:subtitle="item?.raw?.type?.name"
@@ -39,7 +57,7 @@
 
 <script>
 export default {
-	props: [ "selections", "color", "label", "icon", "items", "displayCount" ],
+	props: [ "selections", "color", "label", "icon", "items", "displayCount", "simpleDisplay" ],
 	computed: {
 		model: {
 			get() { return this.selections; },

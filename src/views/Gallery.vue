@@ -39,12 +39,13 @@ import Sidebar from '@/components/framework/Sidebar.vue';
 import MapCard from '@/components/images/MapCard.vue';
 import ImageUpload from '@/components/images/ImageUpload.vue';
 import MapPopup from '@/components/images/MapPopup.vue';
+import FoldableSearchBars from '@/components/search/FoldableSearchBars.vue';
 
 import { useDataStore } from '@/stores/data';
 import { useFiltersStore } from '@/stores/filters';
 
 export default {
-	components: { Sidebar, MapCard, ImageUpload, MapPopup },
+	components: { Sidebar, MapCard, ImageUpload, MapPopup, FoldableSearchBars },
 
 	computed: {
 		moreMapsExist() { return this.dataStore.moreMapsExist; }
@@ -63,7 +64,7 @@ export default {
 		},
 		toggleFilterAuthor(author) {
 			this.filtersStore.toggleAuthor(this.dataStore.authors.find(a => a.id === author));
-		}
+		},
 	},
 
 	mounted() {
@@ -79,6 +80,8 @@ export default {
 		const popupMap = ref(null);
 
 		const scroller = ref(null);
+
+		const test = ref(true);
 
 		useInfiniteScroll(
 			scroller,
@@ -96,11 +99,12 @@ export default {
 			popupMap,
 			
 			scroller,
+
+			test
 		}
 	}
 }
 </script>
 
 <style>
-
 </style>

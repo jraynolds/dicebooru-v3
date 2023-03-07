@@ -1,10 +1,10 @@
 <template>
 	<v-autocomplete 
-		v-model="model"
-		:items="items"
-		:label="label" 
-		:prepend-icon="icon"
-		:color="color"
+		v-model="filtersStore.author"
+		:items="dataStore.getAuthors"
+		label="Filter by an author:" 
+		prepend-icon="mdi-account"
+		color="secondary"
 		clearable
 		item-title="name"
 		return-object
@@ -21,24 +21,18 @@
 
 <script>
 import { toUpperCase } from "@/scripts/extensions"
+import { useDataStore } from "@/stores/data";
+import { useFiltersStore } from "@/stores/filters";
 
 export default {
-	props: [ "selection", "color", "label", "icon", "items", "displayCount" ],
-
-	computed: {
-		model: {
-			get() { return this.selection; },
-			set(v) {
-				console.log(v);
-				this.$emit("update:selection", v);
-			}
-		}
-	},
-
 	setup() {
+		const dataStore = useDataStore();
+		const filtersStore = useFiltersStore();
 
 		return {
-			toUpperCase
+			toUpperCase,
+			dataStore,
+			filtersStore
 		}
 	}
 }
