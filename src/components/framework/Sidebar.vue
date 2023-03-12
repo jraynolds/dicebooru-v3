@@ -101,7 +101,7 @@ export default {
 	methods: {
 		async search() {
 			this.searching = true;
-			await this.dataStore.newQuery();
+			await this.dataStore.newMapQuery();
 			this.searching = false;
 		},
 	},

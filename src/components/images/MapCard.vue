@@ -179,12 +179,11 @@ export default {
 			this.initialLoad();
 		},
 		isVisible(val) {
-			if (!this.hasLoaded && val && this?.map) {
-				this.hasLoaded = true;
+			this.$nextTick(() => {
 				console.log(this.map);
 				console.log(this.map.id);
 				this.initialLoad();
-			}
+			});
 		}
 	},
 

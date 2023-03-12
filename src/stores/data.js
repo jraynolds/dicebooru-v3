@@ -71,9 +71,23 @@ export const useDataStore = defineStore({
 		 */
 		async newMapQuery() {
 			this.mapChunkStart = 0;
+			const filtersStore = useFiltersStore();
 			this.maps = [];
-			const { data, error } = await this.loadFilteredMaps(0, CHUNK_SIZE);
+			
+			const { data, error } = await this.loadFilteredMaps(
+				0, 
+				CHUNK_SIZE,
+				filtersStore.getIncludedTags, 
+				filtersStore.getExcludedTags, 
+				filtersStore.author
+			);
 			if (data && !error) this.incrementMapChunk(); 
+		},
+		/**
+		 * Increment the chunk of maps we're currently loading by adding the chunk size, stopping at the max maps available.
+		 */
+		incrementMapChunk() {
+			this.mapChunkStart = Math.min(this.mapChunkStart + CHUNK_SIZE, this.totalMapsAvailable);
 		},
 		/**
 		 * Load additional maps from the database. Usually by reaching the end of the infinite scroller.
@@ -89,7 +103,13 @@ export const useDataStore = defineStore({
 			let data, error;
 
 			if (filtersStore.areFiltersActive) {
-				const filteredMapsResult = await this.loadFilteredMaps(chunkRange[0], chunkRange[1]);
+				const filteredMapsResult = await this.loadFilteredMaps(
+					chunkRange[0], 
+					chunkRange[1], 
+					filtersStore.getIncludedTags, 
+					filtersStore.getExcludedTags, 
+					filtersStore.author
+				);
 				data = filteredMapsResult.data;
 				error = filteredMapsResult.error;
 			} else {
@@ -102,7 +122,7 @@ export const useDataStore = defineStore({
 			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) if (error) console.log(error);
 			if (error) return { data, error };
 
-			this.mapChunkStart = Math.min(this.mapChunkStart + CHUNK_SIZE, this.totalMapsAvailable);
+			this.incrementMapChunk();
 
 			return { data, error };
 		},
@@ -342,6 +362,10 @@ export const useDataStore = defineStore({
 		async loadFilteredMaps(rangeStart, rangeEnd, includedTags, excludedTags, author) {
 			this.loading = true;
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(`Getting filtered maps between indices ${rangeStart} and ${rangeEnd}.`);
+			if (DEBUGS.pinia || DEBUGS.backend) console.log("Our filters are:");
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(includedTags);
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(excludedTags);
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(author);
 
 			let query = supabase
 				.from('maps_tags_grouped')
@@ -362,6 +386,19 @@ export const useDataStore = defineStore({
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
 			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) if (error) console.log(error);
 			if (error) return { data, error };
+
+			let num_query = supabase
+			.from('maps_tags_grouped')
+			.select('*', { count: 'exact' });		
+			if (includedTags?.length > 0) num_query = num_query.contains('tags', includedTags.map(t => t.id));
+			if (excludedTags?.length > 0) {
+				const excludedTagObject = `{${(excludedTags.map(t => `"${t.id}"`)).join("','")}}`;
+				num_query = num_query.not('tags', 'cs', excludedTagObject);
+			}
+			if (author) num_query = num_query.eq('author', author.id);
+			
+			const { count, num_error } = await num_query;
+			console.log(count);
 
 			let isPresent = false;
 			const additions = [];
