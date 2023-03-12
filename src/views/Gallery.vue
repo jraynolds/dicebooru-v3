@@ -7,35 +7,43 @@
 	
 	<v-container style="min-height: 100%;" class="justify-center align-center d-flex flex-wrap">
 
-		<v-card-title>Now showing {{ dataStore.getMaps.length }} of {{ dataStore.getTotalMapsAvailable }} maps!</v-card-title>
-
-		<v-row>
-			<v-col
-				class="d-flex align-center justify-center"
-				v-for="map in dataStore.getMaps" 
-				:key="map.id"
+		<v-row class="justify-center align-center d-flex flex-column">
+			<v-col class="align-center justify-center d-flex">
+				<v-card-title>Now showing {{ dataStore.getMaps.length }} of {{ dataStore.getTotalMapsAvailable }} maps!</v-card-title>
+			</v-col>
+			<v-col>
+				<v-row>
+					<v-col
+						class="d-flex align-center justify-center"
+						v-for="map in dataStore.getMaps" 
+						:key="map.id"
+					>
+						<MapCard  
+							:map="map"
+							@click="selectMap(map)"
+							@tagClick="toggleFilterTag"
+							@headerClick="toggleFilterAuthor(map.author)"
+							height="400" 
+							width="300" 
+						/>
+					</v-col>
+				</v-row>
+			</v-col>
+			<v-col 
+				class="justify-center align-center d-flex" 
+				style="width: 100%; text-align: center; height: 100px;"
+				ref="scrollStop"
 			>
-				<MapCard  
-					:map="map"
-					@click="selectMap(map)"
-					@tagClick="toggleFilterTag"
-					@headerClick="toggleFilterAuthor(map.author)"
-					height="400" 
-					width="300" 
-				/>
+				<v-progress-circular indeterminate size="small" v-if="loadingMoreMaps" />
+				<span v-if="loadingMoreMaps">'&nbsp;Loading more...'</span>
+				<span v-else-if="moreMapsExist">Scroll down to load more maps!</span>
+				<span v-else>All maps loaded!</span>
 			</v-col>
 		</v-row>
 
-		<v-col 
-			class="justify-center align-center d-flex" 
-			style="width: 100%; text-align: center; height: 100px;"
-			ref="scrollStop"
-		>
-			<v-progress-circular indeterminate size="small" v-if="loadingMoreMaps" />
-			<span v-if="loadingMoreMaps">'&nbsp;Loading more...'</span>
-			<span v-else-if="moreMapsExist">Scroll down to load more maps!</span>
-			<span v-else>All maps loaded!</span>
-		</v-col>
+		
+
+		
 	</v-container>
 </template>
 

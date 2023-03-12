@@ -73,7 +73,7 @@ export const useDataStore = defineStore({
 			this.mapChunkStart = 0;
 			const filtersStore = useFiltersStore();
 			this.maps = [];
-			
+
 			const { data, error } = await this.loadFilteredMaps(
 				0, 
 				CHUNK_SIZE,
@@ -144,6 +144,27 @@ export const useDataStore = defineStore({
 				if (t1.type.id == t2.type.id) return t2.num_maps - t1.num_maps;
 				if (t1.type.id > t2.type.id) return 1;
 			});
+		},
+		/**
+		 * Adds elements to an array, updating elements with matching IDs instead.
+		 * @param {Array(Object)} array the existing array to be added to.
+		 * @param {Array(Object)} elements the new elements to be added or updated. 
+		 */
+		addAndUpdate(array, elements) {
+			let isPresent = false;
+			const additions = [];
+			for (let i=0; i<elements.length; i++) {
+				isPresent = false;
+				for (let j=0; j<array.length; j++) {
+					if (elements[i].id == array[j].id) {
+						Object.assign(array[j], elements[i]);
+						isPresent = true;
+						break;
+					}
+				}
+				if (!isPresent) additions.push(elements[i]);
+			}
+			for (const element of additions) array.push(element);
 		},
 		/**
 		 * Perform an initial load for the database when the page refreshes.
@@ -223,20 +244,7 @@ export const useDataStore = defineStore({
 			if (error) return { data, error };
 			this.lastTagsReadDate = date;
 
-			let isPresent = false;
-			const additions = [];
-			for (let i=0; i<data.length; i++) {
-				isPresent = false;
-				for (let j=0; j<this.tags.length; j++) {
-					if (data[i].id == this.tags[j].id) {
-						Object.assign(this.tags[j], data[i]);
-						isPresent = true;
-						break;
-					}
-				}
-				if (!isPresent) additions.push(data[i]);
-			}
-			for (const tag of additions) this.tags.push(tag);
+			this.addAndUpdate(this.tags, data);
 
 			this.orderTags();
 					
@@ -270,20 +278,7 @@ export const useDataStore = defineStore({
 			if (error) return { data, error };
 			this.lastAuthorsReadDate = date;
 
-			let isPresent = false;
-			const additions = [];
-			for (let i=0; i<data.length; i++) {
-				isPresent = false;
-				for (let j=0; j<this.authors.length; j++) {
-					if (data[i].id == this.authors[j].id) {
-						Object.assign(this.authors[j], data[i]);
-						isPresent = true;
-						break;
-					}
-				}
-				if (!isPresent) additions.push(data[i]);
-			}
-			for (const author of additions) this.authors.push(author);
+			this.addAndUpdate(this.authors, data);
 
 			return { data, error };
 		},
@@ -309,21 +304,8 @@ export const useDataStore = defineStore({
 			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) if (error) console.log(error);
 			if (error) return { data, error };
 			// this.lastMapsReadDate = date;
-
-			let isPresent = false;
-			const additions = [];
-			for (let i=0; i<data.length; i++) {
-				isPresent = false;
-				for (let j=0; j<this.maps.length; j++) {
-					if (data[i].id == this.maps[j].id) {
-						Object.assign(this.maps[j], data[i]);
-						isPresent = true;
-						break;
-					}
-				}
-				if (!isPresent) additions.push(data[i]);
-			}
-			for (const map of additions) this.maps.push(map);
+			
+			this.addAndUpdate(this.maps, data);
 
 			return { data, error };
 		},
@@ -400,20 +382,9 @@ export const useDataStore = defineStore({
 			const { count, num_error } = await num_query;
 			console.log(count);
 
-			let isPresent = false;
-			const additions = [];
-			for (let i=0; i<data.length; i++) {
-				isPresent = false;
-				for (let j=0; j<this.maps.length; j++) {
-					if (data[i].id == this.maps[j].id) {
-						Object.assign(this.maps[j], data[i]);
-						isPresent = true;
-						break;
-					}
-				}
-				if (!isPresent) additions.push(data[i]);
-			}
-			for (const map of additions) this.maps.push(map);
+			const newMaps = [];
+			for (const map of data) newMaps.push(map.map);
+			this.addAndUpdate(this.maps, newMaps);
 
 			this.loading = false;
 
@@ -427,7 +398,11 @@ export const useDataStore = defineStore({
 		async loadThumbURL(mapID) {
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(`Potentially loading a thumb URL for map ${mapID}`);
 			const map = this.maps.find(m => m.id === mapID);
-			if (map.thumb_url && map.image_fetched &&  Date.now() - map.thumb_fetched < IMAGE_PERSISTENCE_SECONDS * 10) return;
+			if (map.thumb_url && map.thumb_fetched && Date.now() - map.thumb_fetched < IMAGE_PERSISTENCE_SECONDS * 1000)
+			{
+				if (DEBUGS.pinia) console.log("Image already loaded.");
+				return;
+			} 
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(map);
 			if (!map) return;
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(`Loading image at URL ${map.thumb_src}`);

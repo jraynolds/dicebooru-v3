@@ -175,13 +175,10 @@ export default {
 
 	watch: {
 		map(m) {
-			console.log(m);
 			this.initialLoad();
 		},
 		isVisible(val) {
 			this.$nextTick(() => {
-				console.log(this.map);
-				console.log(this.map.id);
 				this.initialLoad();
 			});
 		}
