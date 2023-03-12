@@ -15,6 +15,7 @@ export const useFiltersStore = defineStore({
 		getExcludedTags: (state) => state.excludedTags,
 		getExcludableTags: (state) => useDataStore().getTags.filter(t => !state.includedTags.includes(t)),
 		getAuthor: (state) => state.author,
+		areFiltersActive: (state) => state.includedTags.length > 0 || state.excludedTags.length > 0 || state.author,
 	},
 	actions: {
 		setIncludedTags(arr) {

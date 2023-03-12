@@ -174,15 +174,22 @@ export default {
 	},
 
 	watch: {
-		map() {
+		map(m) {
+			console.log(m);
 			this.initialLoad();
 		},
 		isVisible(val) {
-			if (!this.hasLoaded && val && this.map) {
+			if (!this.hasLoaded && val && this?.map) {
 				this.hasLoaded = true;
+				console.log(this.map);
+				console.log(this.map.id);
 				this.initialLoad();
 			}
 		}
+	},
+
+	beforeUpdate() {
+		console.log(this.map.id);
 	},
 
 	setup() {
