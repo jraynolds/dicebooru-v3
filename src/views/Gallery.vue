@@ -7,7 +7,7 @@
 
 	<v-container style="min-height: 100%;">
 
-		<v-row class="justify-center align-center d-flex" ref="scroller">
+		<v-row class="justify-center align-center d-flex" ref="infiniteScroller">
 			<v-col
 				class="d-flex align-center justify-center"
 				v-for="map in dataStore.getMaps" 
@@ -24,7 +24,10 @@
 			</v-col>
 		</v-row>
 
-		<v-col class="justify-center align-center d-flex" style="width: 100%; text-align: center; height: 100px;">
+		<v-col 
+			class="justify-center align-center d-flex" 
+			style="width: 100%; text-align: center; height: 100px;"
+		>
 			<v-progress-circular indeterminate size="small" v-if="moreMapsExist" />
 			{{ moreMapsExist ? '&nbsp;Loading More...' : 'All maps loaded!' }}
 		</v-col>
@@ -33,7 +36,6 @@
 
 <script>
 import { ref } from 'vue';
-import { useInfiniteScroll } from '@vueuse/core'
 
 import Sidebar from '@/components/framework/Sidebar.vue';
 import MapCard from '@/components/images/MapCard.vue';
@@ -65,11 +67,23 @@ export default {
 		toggleFilterAuthor(author) {
 			this.filtersStore.toggleAuthor(this.dataStore.authors.find(a => a.id === author));
 		},
+		loadMoreMaps() {
+			console.log("test!");
+		}
 	},
 
 	mounted() {
 		console.log("mounting!");
 		this.dataStore.initialLoad();
+
+		const el = this.infiniteScroller.$el;
+		this.$nextTick(() => {
+			document.addEventListener('scroll', function (e) {
+				console.log(el);
+				console.log(el.scrollHeight - el.scrollTop() - el.outerHeight());
+				if (el.scrollHeight - el.scrollTop() - el.outerHeight() < 1) this.loadMoreMaps();
+			});
+		})
 	},
 
 	setup() {
@@ -79,17 +93,7 @@ export default {
 		const popupOpen = ref(false);
 		const popupMap = ref(null);
 
-		const scroller = ref(null);
-
-		const test = ref(true);
-
-		useInfiniteScroll(
-			scroller,
-			() => {
-				console.log("Scrolled");
-			},
-			{ distance: 10 }
-		)
+		const infiniteScroller = ref(null);
 
 		return {
 			dataStore,
@@ -97,10 +101,8 @@ export default {
 
 			popupOpen,
 			popupMap,
-			
-			scroller,
 
-			test
+			infiniteScroller
 		}
 	}
 }
