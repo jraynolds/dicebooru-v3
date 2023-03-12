@@ -4,10 +4,12 @@
 	<ImageUpload />
 
 	<MapPopup :open="popupOpen" @update:open="setPopupOpen" :map="popupMap" />
+	
+	<v-container style="min-height: 100%;" class="justify-center align-center d-flex flex-wrap">
 
-	<v-container style="min-height: 100%;">
+		<v-card-title>Now showing {{ dataStore.getMaps.length }} of {{ dataStore.getTotalMapsAvailable }} maps!</v-card-title>
 
-		<v-row class="justify-center align-center d-flex" ref="infiniteScroller">
+		<v-row>
 			<v-col
 				class="d-flex align-center justify-center"
 				v-for="map in dataStore.getMaps" 
@@ -27,9 +29,12 @@
 		<v-col 
 			class="justify-center align-center d-flex" 
 			style="width: 100%; text-align: center; height: 100px;"
+			ref="scrollStop"
 		>
-			<v-progress-circular indeterminate size="small" v-if="moreMapsExist" />
-			{{ moreMapsExist ? '&nbsp;Loading More...' : 'All maps loaded!' }}
+			<v-progress-circular indeterminate size="small" v-if="loadingMoreMaps" />
+			<span v-if="loadingMoreMaps">'&nbsp;Loading more...'</span>
+			<span v-else-if="moreMapsExist">Scroll down to load more maps!</span>
+			<span v-else>All maps loaded!</span>
 		</v-col>
 	</v-container>
 </template>
@@ -50,7 +55,8 @@ export default {
 	components: { Sidebar, MapCard, ImageUpload, MapPopup, FoldableSearchBars },
 
 	computed: {
-		moreMapsExist() { return this.dataStore.moreMapsExist; }
+		moreMapsExist() { return this.dataStore.moreMapsExist; },
+		loadingMoreMaps() { return this.dataStore.isLoading; },
 	},
 
 	methods: {
@@ -68,7 +74,8 @@ export default {
 			this.filtersStore.toggleAuthor(this.dataStore.authors.find(a => a.id === author));
 		},
 		loadMoreMaps() {
-			console.log("test!");
+			if (this.loadingMoreMaps) return;
+			this.dataStore.loadMoreMaps();
 		}
 	},
 
@@ -76,13 +83,13 @@ export default {
 		console.log("mounting!");
 		this.dataStore.initialLoad();
 
-		const el = this.infiniteScroller.$el;
 		this.$nextTick(() => {
+			const el = this.scrollStop.$el;
 			document.addEventListener('scroll', function (e) {
-				console.log(el);
-				console.log(el.scrollHeight - el.scrollTop() - el.outerHeight());
-				if (el.scrollHeight - el.scrollTop() - el.outerHeight() < 1) this.loadMoreMaps();
-			});
+				var rect = el.getBoundingClientRect();
+				const isVisible = (rect.top >= 0) && (rect.bottom <= window.innerHeight);
+				if (isVisible) this.loadMoreMaps();
+			}.bind(this));
 		})
 	},
 
@@ -93,7 +100,7 @@ export default {
 		const popupOpen = ref(false);
 		const popupMap = ref(null);
 
-		const infiniteScroller = ref(null);
+		const scrollStop = ref(null);
 
 		return {
 			dataStore,
@@ -102,7 +109,7 @@ export default {
 			popupOpen,
 			popupMap,
 
-			infiniteScroller
+			scrollStop
 		}
 	}
 }

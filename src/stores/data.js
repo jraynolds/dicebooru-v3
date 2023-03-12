@@ -36,7 +36,7 @@ tags:maps_tags (
 )
 `;
 
-const CHUNK_SIZE = 6;
+const CHUNK_SIZE = 5;
 const IMAGE_PERSISTENCE_SECONDS = 3600;
 
 export const useDataStore = defineStore({
@@ -51,7 +51,8 @@ export const useDataStore = defineStore({
 		lastTagsReadDate: null,
 		lastAuthorsReadDate: null,
 		lastMapsReadDate: null,
-		mapChunkStart: 0
+		mapChunkStart: 0,
+		totalMapsAvailable: 0,
 	}),
   persist: true,
 	getters: {
@@ -61,7 +62,8 @@ export const useDataStore = defineStore({
 		isLoading: (state) => state.loading,
 		isUploading: (state) => state.uploadStage != 0,
 		getUploadStage: (state) => state.uploadStage,
-		moreMapsExist: (state) => state.statistics?.find(s => s.key == 'num_maps')?.num_value > state.maps.length
+		moreMapsExist: (state) => state.totalMapsAvailable > state.maps.length,
+		getTotalMapsAvailable: (state) => state.totalMapsAvailable,
 	},
 	actions: {
 		/**
@@ -78,21 +80,29 @@ export const useDataStore = defineStore({
 		 * @return {Object} a destructured object of keys "data," containing the database result data, and "error," containing optional error data.
 		 */
 		async loadMoreMaps() {
+			if (this.isLoading) return;
+			if (DEBUGS.pinia || DEBUGS.backend) console.log("Loading additional maps.");
+
 			const filtersStore = useFiltersStore();
 			const chunkRange = [this.mapChunkStart, this.mapChunkStart + CHUNK_SIZE];
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(`Loading from ${chunkRange[0]} to ${chunkRange[1]}.`);
 			let data, error;
 
 			if (filtersStore.areFiltersActive) {
-				const filteredMapsResult = await loadFilteredMaps(chunkRange[0], chunkRange[1]);
+				const filteredMapsResult = await this.loadFilteredMaps(chunkRange[0], chunkRange[1]);
 				data = filteredMapsResult.data;
 				error = filteredMapsResult.error;
 			} else {
-				const mapsResult = await loadMaps(chunkRange[0], chunkRange[1]);
+				const mapsResult = await this.loadMaps(chunkRange[0], chunkRange[1]);
 				data = mapsResult.data;
 				error = mapsResult.error;
 			}
 
-			if (!error && data) this.mapChunkStart += CHUNK_SIZE;
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
+			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) if (error) console.log(error);
+			if (error) return { data, error };
+
+			this.mapChunkStart = Math.min(this.mapChunkStart + CHUNK_SIZE, this.totalMapsAvailable);
 
 			return { data, error };
 		},
@@ -125,9 +135,13 @@ export const useDataStore = defineStore({
 				this.loadStatistics(),
 				this.loadTags(),
 				this.loadAuthors(),
-				this.loadMaps()
+				this.loadMaps(0, CHUNK_SIZE)
 			]
 			await Promise.all(promises);
+
+			this.mapChunkStart = CHUNK_SIZE;
+			this.totalMapsAvailable = this.statistics.find(s => s.key == 'num_maps').num_value;
+
 			this.loading = false;
 		},
 		/**
@@ -260,7 +274,7 @@ export const useDataStore = defineStore({
 		 * @return {Object} a destructured object of keys "data," containing the database result data, and "error," containing optional error data.
 		 */
 		async loadMaps(rangeStart, rangeEnd) {
-			if (DEBUGS.pinia || DEBUGS.backend) console.log("Getting maps.");
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(`Getting maps between indices ${rangeStart} and ${rangeEnd}.`);
 
 			const date = new Date().toISOString();
 			let query = supabase
@@ -268,13 +282,13 @@ export const useDataStore = defineStore({
 				.select(MAP_SELECT_QUERY)
 				.order('updated_at', { ascending: false })
 				.range(rangeStart, rangeEnd);
-			if (this.lastMapsReadDate) query = query.gte('updated_at', this.lastMapsReadDate);
+			// if (this.lastMapsReadDate) query = query.gte('updated_at', this.lastMapsReadDate);
 			const { data, error } = await query;
 
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
 			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) if (error) console.log(error);
 			if (error) return { data, error };
-			this.lastMapsReadDate = date;
+			// this.lastMapsReadDate = date;
 
 			let isPresent = false;
 			const additions = [];
@@ -327,7 +341,7 @@ export const useDataStore = defineStore({
 		 */
 		async loadFilteredMaps(rangeStart, rangeEnd, includedTags, excludedTags, author) {
 			this.loading = true;
-			if (DEBUGS.pinia || DEBUGS.backend) console.log("Getting filtered maps.");
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(`Getting filtered maps between indices ${rangeStart} and ${rangeEnd}.`);
 
 			let query = supabase
 				.from('maps_tags_grouped')

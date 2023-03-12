@@ -30,7 +30,7 @@
 		:persistent="uploadingMap"
 	>
 		<template v-slot:activator="{ props }">
-			<v-fab-transition>
+			<v-fab-transition style="z-index: 100">
 				<v-btn
 					color="warning"
 					fixed
