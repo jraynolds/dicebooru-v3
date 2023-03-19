@@ -4,9 +4,14 @@ import DEBUGS from '@/plugins/debug';
 
 const lockStates = [
 	{
-		title: "unlocked",
+		title: "uncertain",
+		icon: "mdi-lock-question",
+		description: "Any use restrictions."
+	},
+	{
+		title: "locked",
 		icon: "mdi-lock-open",
-		description: "All uses allowed."
+		description: "Only free maps."
 	},
 	{
 		title: "locked",
@@ -31,6 +36,7 @@ export const useFiltersStore = defineStore({
 		getExcludableTags: (state) => useDataStore().getTags.filter(t => !state.includedTags.includes(t)),
 		getAuthor: (state) => state.author,
 		areFiltersActive: (state) => state.includedTags.length > 0 || state.excludedTags.length > 0 || state.author,
+		getLockStateIndex: (state) => state.lockStateIndex,
 		getLockState: (state) => lockStates[state.lockStateIndex],
 		getMinRating: (state) => state.minRating,
 	},
@@ -69,10 +75,10 @@ export const useFiltersStore = defineStore({
 			if (this.getAuthor && this.getAuthor == author) this.author = null;
 			else this.author = author;
 		},
-		toggleLockState() {
-			if (DEBUGS.pinia || DEBUGS.filters) console.log("Toggling our filtering lock state.");
-			if (this.lockStateIndex == 0) this.lockStateIndex = 1;
-			else this.lockStateIndex = 0; 
+		incrementLockState() {
+			if (DEBUGS.pinia || DEBUGS.filters) console.log("Incrementing our filtering lock state.");
+			if (this.lockStateIndex == 2) this.lockStateIndex = 0;
+			else this.lockStateIndex++; 
 		},
 		setMinRating(rating) {
 			if (DEBUGS.pinia || DEBUGS.filters) console.log(`Setting our minimum rating to ${rating}`);

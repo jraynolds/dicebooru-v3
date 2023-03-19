@@ -33,7 +33,7 @@
 								<v-col class="flex-grow-0">
 									<v-row class="flex-nowrap">
 										<v-col>
-											<v-btn size="large" @click="filtersStore.toggleLockState">
+											<v-btn size="large" @click="filtersStore.incrementLockState">
 												<v-icon size="large">
 													{{ filtersStore.getLockState.icon }}
 												</v-icon>
@@ -144,6 +144,7 @@ export default {
 		async search() {
 			this.searching = true;
 			await this.dataStore.newMapQuery();
+			this.drawerExpanded = false;
 			this.searching = false;
 		}
 	},

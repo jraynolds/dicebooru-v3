@@ -77,7 +77,7 @@ export const useDataStore = defineStore({
 				filtersStore.getIncludedTags, 
 				filtersStore.getExcludedTags, 
 				filtersStore.author,
-				filtersStore.getLockState,
+				filtersStore.getLockStateIndex,
 				filtersStore.getMinRating
 			);
 			if (data && !error) this.incrementMapChunk(); 
@@ -107,7 +107,10 @@ export const useDataStore = defineStore({
 					chunkRange[1], 
 					filtersStore.getIncludedTags, 
 					filtersStore.getExcludedTags, 
-					filtersStore.author
+					filtersStore.author,
+					filtersStore.getLockStateIndex,
+					filtersStore.getMinRating
+
 				);
 				data = filteredMapsResult.data;
 				error = filteredMapsResult.error;
@@ -355,6 +358,8 @@ export const useDataStore = defineStore({
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(includedTags);
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(excludedTags);
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(author);
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(lockState);
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(minRating);
 
 			let query = supabase
 				.from('maps_view')
@@ -366,6 +371,11 @@ export const useDataStore = defineStore({
 				query = query.not('tags', 'cs', excludedTagObject);
 			}
 			if (author) query = query.eq('author', author.id);
+			if (lockState != 0) {
+				if (lockState == 1) query = query.or('security_level.is.null','security_level.neq.3');
+				else if (lockState == 2) query = query.eq('security_level', 2);
+			}
+			if (minRating) query = query.gte('avg_rating', minRating);
 			const { data, error } = await query;
 			
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
@@ -385,12 +395,17 @@ export const useDataStore = defineStore({
 				num_query = num_query.not('tags', 'cs', excludedTagObject);
 			}
 			if (author) num_query = num_query.eq('author', author.id);
+			if (lockState != 0) {
+				if (lockState == 1) query = query.neq('security_level', 3);
+				else if (lockState == 2) query = query.eq('security_level', 2);
+			}
+			if (minRating) query = query.gte('avg_rating', minRating);
 			
 			const { count, num_error } = await num_query;
-			console.log(count);
+			if (count != null) this.totalMapsAvailable = count;
 
 			const newMaps = [];
-			for (const map of data) newMaps.push(map.map);
+			for (const map of data) newMaps.push(map);
 			this.addAndUpdate(this.maps, newMaps);
 
 			this.loading = false;
