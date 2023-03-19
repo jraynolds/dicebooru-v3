@@ -364,7 +364,8 @@ export const useDataStore = defineStore({
 
 			let query = supabase
 				.from('maps_view')
-				.select(MAP_SELECT_QUERY)
+				.select(MAP_SELECT_QUERY, { count: 'exact' })
+				.order('updated_at', { ascending: false })
 				.range(rangeStart, rangeEnd);
 			if (includedTags?.length > 0) query = query.contains('tags', includedTags.map(t => t.id));
 			if (excludedTags?.length > 0) {
@@ -377,37 +378,19 @@ export const useDataStore = defineStore({
 				else if (lockState == 2) query = query.eq('security_level', 2);
 			}
 			if (minRating) query = query.gte('avg_rating', minRating);
-			const { data, error } = await query;
+
+			const { data, count, error } = await query;
 			
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(count);
 			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) if (error) console.log(error);
 			
 			if (error) {
 				this.loading = false;
-				return { data, error };
+				return { data, count, error };
 			}
 
-			if (DEBUGS.pinia || DEBUGS.backend) console.log(`Getting the total number of maps meeting this query.`);
-			let num_query = supabase
-			.from('maps_view')
-			.select('*', { count: 'exact' });		
-			if (includedTags?.length > 0) num_query = num_query.contains('tags', includedTags.map(t => t.id));
-			if (excludedTags?.length > 0) {
-				const excludedTagObject = `{${(excludedTags.map(t => `"${t.id}"`)).join("','")}}`;
-				num_query = num_query.not('tags', 'cs', excludedTagObject);
-			}
-			if (author) num_query = num_query.eq('author', author.id);
-			if (lockState != 0) {
-				if (lockState == 1) query = query.neq('security_level', 3);
-				else if (lockState == 2) query = query.eq('security_level', 2);
-			}
-			if (minRating) query = query.gte('avg_rating', minRating);
-			
-			if (DEBUGS.pinia || DEBUGS.backend) console.log(`Getting the total number of maps meeting this query.`);
-			const { count, num_error } = await num_query;
-			if (DEBUGS.pinia || DEBUGS.backend) console.log(`Total matching number of maps: ${count}`);
-			if (count != null) this.totalMapsAvailable = count;
-			console.log(this.totalMapsAvailable);
+			this.totalMapsAvailable = count;
 
 			const newMaps = [];
 			for (const map of data) newMaps.push(map);
