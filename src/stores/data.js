@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { useFiltersStore } from './filters';
+import { useAuthStore } from './auth';
 import { useStorage } from "@vueuse/core"
 import supabase from '@/plugins/supabase';
 import DEBUGS from '@/plugins/debug';
@@ -573,11 +574,23 @@ export const useDataStore = defineStore({
 		},
 		/**
 		 * Uploads or updates this user's rating for this map in the database.
-		 * @param {*} map 
-		 * @param {*} rating 
+		 * @param {Object} map the map we're giving a rating to.
+		 * @param {float} rating the rating from .5-5 we're giving.
 		 */
 		async rateMap(map, rating) {
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(`Submitting a rating of ${rating} for this map:`);
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(map);
+			
+			const authStore = useAuthStore();
 
+			const { data, error } = await supabase
+				.from('ratings')
+				.upsert({ map: map.id, profile: authStore.getUser.id, rating: rating }, { onConflict: 'map, profile' });
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
+			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) if (error) console.log(error);
+
+			map.avg_rating = rating;
+			return { data, error };
 		}
 	}
 })

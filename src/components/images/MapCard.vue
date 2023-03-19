@@ -59,15 +59,20 @@
 				</div>
 			</template>
 
-			<StarRating 
-				v-show="map.avg_rating || large"
-				:rating="map.avg_rating"
-				:read-only="!authStore.getUser || !large"
-				:show-rating="false"
-				:star-size="large ? 50 : 20"
-				:increment=".5"
-				style="position: absolute; right: 0; bottom: 0; margin-right: 0; margin-left: auto;" 
-			/>
+			<div 
+				style="position: absolute; right: 0; bottom: 0; margin-right: 0; margin-left: auto;"
+				@click.stop=""
+			>
+				<StarRating 
+					v-show="map.avg_rating || (large && authStore.getUser)"
+					:rating="map.avg_rating"
+					:read-only="!authStore.getUser || !large"
+					:show-rating="false"
+					:star-size="large ? 50 : 20"
+					:increment=".5"
+					@update:rating="dataStore.rateMap(map, $event)" 
+				/>
+			</div>
 		</v-img>
 
 		<v-row class="pl-2 ma-0" style="overflow-y: auto; height: 80px; min-height: 80px;">
