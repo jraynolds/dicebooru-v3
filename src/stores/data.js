@@ -387,6 +387,7 @@ export const useDataStore = defineStore({
 				return { data, error };
 			}
 
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(`Getting the total number of maps meeting this query.`);
 			let num_query = supabase
 			.from('maps_view')
 			.select('*', { count: 'exact' });		
@@ -402,8 +403,11 @@ export const useDataStore = defineStore({
 			}
 			if (minRating) query = query.gte('avg_rating', minRating);
 			
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(`Getting the total number of maps meeting this query.`);
 			const { count, num_error } = await num_query;
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(`Total matching number of maps: ${count}`);
 			if (count != null) this.totalMapsAvailable = count;
+			console.log(this.totalMapsAvailable);
 
 			const newMaps = [];
 			for (const map of data) newMaps.push(map);

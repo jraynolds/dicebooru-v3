@@ -23,6 +23,12 @@
 						<!-- <v-card color="highlight" class="pa-2 pb-1"> -->
 							<v-row class="d-flex justify-center align-center">
 								<v-col class="d-flex justify-center">
+									<span 
+										class="mr-4"
+										style="max-width: 120px; text-align: right;"
+									>
+										Filter by a minimum rating:
+									</span>
 									<StarRating
 										:increment=".5"
 										:show-rating="false"
