@@ -12,11 +12,7 @@ uploader (
 	author
 ),
 author,
-security_level (
-	name,
-	description,
-	icon
-),
+security_level,
 src,
 thumb_src,
 purchase_link,
@@ -33,7 +29,8 @@ tags:maps_tags (
 			icon
 		)
 	)
-)
+),
+avg_rating
 `;
 
 const CHUNK_SIZE = 5;
@@ -79,7 +76,9 @@ export const useDataStore = defineStore({
 				CHUNK_SIZE,
 				filtersStore.getIncludedTags, 
 				filtersStore.getExcludedTags, 
-				filtersStore.author
+				filtersStore.author,
+				filtersStore.getLockState,
+				filtersStore.getMinRating
 			);
 			if (data && !error) this.incrementMapChunk(); 
 		},
@@ -294,7 +293,7 @@ export const useDataStore = defineStore({
 
 			const date = new Date().toISOString();
 			let query = supabase
-				.from('maps')
+				.from('maps_view')
 				.select(MAP_SELECT_QUERY)
 				.order('updated_at', { ascending: false })
 				.range(rangeStart, rangeEnd);
@@ -344,9 +343,11 @@ export const useDataStore = defineStore({
 		 * @param {Array(Object)} includedTags the tags we're filtering positively by.
 		 * @param {Array(Object)} excludedTags the tags we're filtering negatively by.
 		 * @param {Object} author the author we're filtering positively by.
+		 * @param {int} lockState the lock state of the maps we're allowing; 0 for all, 1 for .
+		 * @param {float} minRating the author we're filtering positively by.
 		 * @return {Object} a destructured object of keys "data," containing the database result data, and "error," containing optional error data.
 		 */
-		async loadFilteredMaps(rangeStart, rangeEnd, includedTags, excludedTags, author) {
+		async loadFilteredMaps(rangeStart, rangeEnd, includedTags, excludedTags, author, lockState, minRating) {
 			if (this.isLoading) return;
 			this.loading = true;
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(`Getting filtered maps between indices ${rangeStart} and ${rangeEnd}.`);
@@ -356,12 +357,8 @@ export const useDataStore = defineStore({
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(author);
 
 			let query = supabase
-				.from('maps_tags_grouped')
-				.select(`
-					map(
-						${MAP_SELECT_QUERY}
-					)
-				`)
+				.from('maps_view')
+				.select(MAP_SELECT_QUERY)
 				.range(rangeStart, rangeEnd);
 			if (includedTags?.length > 0) query = query.contains('tags', includedTags.map(t => t.id));
 			if (excludedTags?.length > 0) {
@@ -380,7 +377,7 @@ export const useDataStore = defineStore({
 			}
 
 			let num_query = supabase
-			.from('maps_tags_grouped')
+			.from('maps_view')
 			.select('*', { count: 'exact' });		
 			if (includedTags?.length > 0) num_query = num_query.contains('tags', includedTags.map(t => t.id));
 			if (excludedTags?.length > 0) {
@@ -558,6 +555,14 @@ export const useDataStore = defineStore({
 			if (error) return { data, error };
 
 			return await this.loadMap(map.id);
-		} 
+		},
+		/**
+		 * Uploads or updates this user's rating for this map in the database.
+		 * @param {*} map 
+		 * @param {*} rating 
+		 */
+		async rateMap(map, rating) {
+
+		}
 	}
 })

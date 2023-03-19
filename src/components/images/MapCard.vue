@@ -58,6 +58,16 @@
 					/>
 				</div>
 			</template>
+
+			<StarRating 
+				v-show="map.avg_rating || large"
+				:rating="map.avg_rating"
+				:read-only="!authStore.getUser || !large"
+				:show-rating="false"
+				:star-size="large ? 50 : 20"
+				:increment=".5"
+				style="position: absolute; right: 0; bottom: 0; margin-right: 0; margin-left: auto;" 
+			/>
 		</v-img>
 
 		<v-row class="pl-2 ma-0" style="overflow-y: auto; height: 80px; min-height: 80px;">
@@ -113,18 +123,20 @@
 <script>
 import { useDataStore } from '@/stores/data';
 import { useFiltersStore } from '@/stores/filters';
-import { toUpperCase } from '@/scripts/extensions'
-import { useElementVisibility } from '@vueuse/core'
+import { useAuthStore } from '@/stores/auth';
+import { toUpperCase } from '@/scripts/extensions';
+import { useElementVisibility } from '@vueuse/core';
 
-import { ref } from 'vue'
+import { ref } from 'vue';
+import StarRating from 'vue-star-rating';
 
-import TagChip from '@/components/images/TagChip.vue'
-import SearchBar from '@/components/search/SearchBar.vue'
+import TagChip from '@/components/images/TagChip.vue';
+import SearchBar from '@/components/search/SearchBar.vue';
 
 export default {
 	props: [ "map", "large" ],
 
-	components: { TagChip, SearchBar },
+	components: { TagChip, SearchBar, StarRating },
 
 	computed: {
 		author() {
@@ -191,6 +203,7 @@ export default {
 	setup() {
 		const dataStore = useDataStore();
 		const filtersStore = useFiltersStore();
+		const authStore = useAuthStore();
 
 		const hasLoaded = ref(false);
 
@@ -207,6 +220,8 @@ export default {
 		return {
 			dataStore,
 			filtersStore,
+			authStore,
+
 			toUpperCase,
 
 			isVisible,

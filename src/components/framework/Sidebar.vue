@@ -19,6 +19,35 @@
 						</v-card>
 					</v-col>
 
+					<v-col class="pl-6 ml-n2 flex-grow-0">
+						<!-- <v-card color="highlight" class="pa-2 pb-1"> -->
+							<v-row class="d-flex justify-center align-center">
+								<v-col class="d-flex justify-center">
+									<StarRating
+										:increment=".5"
+										:show-rating="false"
+										:rating="filtersStore.getMinRating"
+										@update:rating="stars = $event"
+									/>
+								</v-col>
+								<v-col class="flex-grow-0">
+									<v-row class="flex-nowrap">
+										<v-col>
+											<v-btn size="large" @click="filtersStore.toggleLockState">
+												<v-icon size="large">
+													{{ filtersStore.getLockState.icon }}
+												</v-icon>
+											</v-btn>
+										</v-col>
+										<v-col style="width: 100px;">
+											{{ filtersStore.getLockState.description }}
+										</v-col>
+									</v-row>
+								</v-col>
+							</v-row>							
+						<!-- </v-card> -->
+					</v-col>
+
 					<v-col class="pl-6 ml-n2">
 						<FoldableSearchBars 
 							class="pt-1"
@@ -86,16 +115,29 @@ import { ref } from 'vue';
 import { useFiltersStore } from '@/stores/filters'
 import { useDataStore } from '@/stores/data'
 
+import StarRating from 'vue-star-rating'
+
 import FoldableSearchBars from '@/components/search/FoldableSearchBars.vue';
 import AuthorFilterBar from '@/components/search/AuthorFilterBar.vue';
 
+
+
 export default {
-  components: { FoldableSearchBars, AuthorFilterBar },
+  components: { FoldableSearchBars, AuthorFilterBar, StarRating },
 
 	computed: {
 		width() {
 			return window.innerWidth * .25;
 		},
+		stars: {
+			get() { return this.filtersStore.getMinRating; },
+			set(val) {
+				console.log(val);
+				console.log(this.filtersStore.getMinRating);
+				if (val == this.filtersStore.getMinRating) this.filtersStore.setMinRating(0);
+				else this.filtersStore.setMinRating(val);
+			}
+		}
 	},
 
 	methods: {
@@ -103,7 +145,7 @@ export default {
 			this.searching = true;
 			await this.dataStore.newMapQuery();
 			this.searching = false;
-		},
+		}
 	},
 
 	setup() {
