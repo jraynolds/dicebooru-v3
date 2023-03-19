@@ -61,7 +61,7 @@
 
 			<div 
 				style="position: absolute; right: 0; bottom: 0; margin-right: 0; margin-left: auto;"
-				@click.stop=""
+				@click.stop="large ? '' : $emit('imageClick')"
 			>
 				<StarRating 
 					v-show="map.avg_rating || (large && authStore.getUser)"
@@ -187,7 +187,7 @@ export default {
 		},
 		initialLoad() {
 			this.dataStore.loadThumbURL(this.map.id);
-		},
+		}
 	},
 
 	watch: {
