@@ -290,6 +290,7 @@ export const useDataStore = defineStore({
 		 */
 		async loadMaps(rangeStart, rangeEnd) {
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(`Getting maps between indices ${rangeStart} and ${rangeEnd}.`);
+			this.loading = true;
 
 			const date = new Date().toISOString();
 			let query = supabase
@@ -302,11 +303,15 @@ export const useDataStore = defineStore({
 
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
 			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) if (error) console.log(error);
-			if (error) return { data, error };
+			if (error) {
+				this.loading = false;
+				return { data, error };
+			}
 			// this.lastMapsReadDate = date;
 			
 			this.addAndUpdate(this.maps, data);
 
+			this.loading = false;
 			return { data, error };
 		},
 		/**
@@ -342,6 +347,7 @@ export const useDataStore = defineStore({
 		 * @return {Object} a destructured object of keys "data," containing the database result data, and "error," containing optional error data.
 		 */
 		async loadFilteredMaps(rangeStart, rangeEnd, includedTags, excludedTags, author) {
+			if (this.isLoading) return;
 			this.loading = true;
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(`Getting filtered maps between indices ${rangeStart} and ${rangeEnd}.`);
 			if (DEBUGS.pinia || DEBUGS.backend) console.log("Our filters are:");
@@ -367,7 +373,11 @@ export const useDataStore = defineStore({
 			
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
 			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) if (error) console.log(error);
-			if (error) return { data, error };
+			
+			if (error) {
+				this.loading = false;
+				return { data, error };
+			}
 
 			let num_query = supabase
 			.from('maps_tags_grouped')
@@ -387,7 +397,6 @@ export const useDataStore = defineStore({
 			this.addAndUpdate(this.maps, newMaps);
 
 			this.loading = false;
-
 			return { data, error };
 		},
 		/**
