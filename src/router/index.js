@@ -73,6 +73,7 @@ export default createRouter({
     {
       path: '/',
       component: Gallery,
+			name: 'Gallery'
     },
     // {
     //   path: '/about',
