@@ -27,7 +27,9 @@ export const useFiltersStore = defineStore({
 		excludedTags: [],
 		author: null,
 		lockStateIndex: 0,
-		minRating: 0
+		minRating: 0,
+		uploader: null,
+		ratedBy: null
 	}),
 	getters: {
 		getIncludedTags: (state) => state.includedTags,
@@ -39,8 +41,19 @@ export const useFiltersStore = defineStore({
 		getLockStateIndex: (state) => state.lockStateIndex,
 		getLockState: (state) => lockStates[state.lockStateIndex],
 		getMinRating: (state) => state.minRating,
+		getUploader: (state) => state.uploader,
+		getRatedBy: (state) => state.ratedBy
 	},
 	actions: {
+		clearFilters() {
+			this.includedTags = [];
+			this.excludedTags = [];
+			this.author = null;
+			this.lockStateIndex = 0;
+			this.minRating = 0;
+			this.uploader = null;
+			this.ratedBy = null;
+		},
 		setIncludedTags(arr) {
 			if (DEBUGS.pinia || DEBUGS.filters) console.log("Changing our array of included, filtering tags to:");
 			if (DEBUGS.pinia || DEBUGS.filters) console.log(arr);
@@ -83,6 +96,14 @@ export const useFiltersStore = defineStore({
 		setMinRating(rating) {
 			if (DEBUGS.pinia || DEBUGS.filters) console.log(`Setting our minimum rating to ${rating}`);
 			this.minRating = rating;
+		},
+		setUploader(uploaderID) {
+			if (DEBUGS.pinia || DEBUGS.filters) console.log(`Setting our uploader ID to ${uploaderID}`);
+			this.uploader = uploaderID;
+		},
+		setRatedBy(raterID) {
+			if (DEBUGS.pinia || DEBUGS.filters) console.log(`Setting our rater ID to ${raterID}`);
+			this.ratedBy = raterID;
 		}
 	}
 })

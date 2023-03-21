@@ -65,23 +65,35 @@
 // export default router
 
 import { createRouter, createWebHistory } from 'vue-router'
-import Gallery from '../views/Gallery.vue'
+import { useAuthStore } from "@/stores/auth"
+import Gallery from '@/views/Gallery.vue'
 
 export default createRouter({
-  history: createWebHistory(),
-  routes: [
-    {
-      path: '/',
-      component: Gallery,
+	history: createWebHistory(),
+	routes: [
+		{
+			path: '/',
+			component: Gallery,
 			name: 'Gallery'
-    },
-    // {
-    //   path: '/about',
-    //   component: () => import('@/views/About.vue'),
-    // },
-    // {
-    //   path: '/contact',
-    //   component: () => import('@/views/Contact.vue'),
-    // },
-  ],
-})
+		},
+		{
+			path: '/account',
+			name: 'Account',
+			component: () => import('../views/Account.vue'),
+			meta: {
+				requiresAuth: true,
+				title: "Account"
+			},
+			beforeEnter: (to, from, next) => {
+				console.log("Checking if we can enter the account page.");
+				console.log(useAuthStore());
+				console.log(useAuthStore().getUser);
+				if (!useAuthStore().getUser) {
+					console.log("Navigation to 'account' page canceled: not logged in.");
+					next({ name: "Gallery" });
+				}
+				next();
+			}
+		}
+	],
+});

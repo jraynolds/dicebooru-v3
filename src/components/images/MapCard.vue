@@ -12,13 +12,25 @@
 					</v-btn>
 				</template>
 		</v-snackbar>
-		<v-snackbar v-model="tagErrorSnackbar" v-if="large">
+		<v-snackbar v-model="errorSnackbar" v-if="large">
 			Unknown error.
 			<template v-slot:actions>
 					<v-btn
 						color="primary"
 						variant="text"
-						@click="tagErrorSnackbar = false"
+						@click="errorSnackbar = false"
+					>
+						Close
+					</v-btn>
+				</template>
+		</v-snackbar>
+		<v-snackbar v-model="ratingSnackbar" v-if="large">
+			Map rated!
+			<template v-slot:actions>
+					<v-btn
+						color="primary"
+						variant="text"
+						@click="ratingSnackbar = false"
 					>
 						Close
 					</v-btn>
@@ -31,7 +43,7 @@
 			style="width: 100%; height: 50px;" 
 			class="mb-1"
 			color="primary"
-			@click.stop="$emit('headerClick')"
+			@click.stop="clickableHeader ? $emit('headerClick') : ''"
 		>
 			<v-card-title>
 				{{ authorName }}
@@ -70,7 +82,7 @@
 					:show-rating="false"
 					:star-size="large ? 50 : 20"
 					:increment=".5"
-					@update:rating="dataStore.rateMap(map, $event)" 
+					@update:rating="rateMap" 
 				/>
 			</div>
 		</v-img>
@@ -81,7 +93,7 @@
 				:key="mapTag.tag.id" 
 				:tag="mapTag.tag"
 				style="min-width: 'fit-content'"
-				@click.stop="$emit('tagClick', mapTag.tag)"
+				@click.stop="clickableTags ? $emit('tagClick', mapTag.tag) : ''"
 				class="mb-1 mr-1"
 			/>
 			<v-dialog
@@ -139,7 +151,7 @@ import TagChip from '@/components/images/TagChip.vue';
 import SearchBar from '@/components/search/SearchBar.vue';
 
 export default {
-	props: [ "map", "large" ],
+	props: [ "map", "large", "clickableHeader", "clickableTags" ],
 
 	components: { TagChip, SearchBar, StarRating },
 
@@ -185,9 +197,14 @@ export default {
 			this.addedTags = [];
 			this.addTagDialog = false;
 		},
+		async rateMap(rating) {
+			const { error } = await this.dataStore.rateMap(map, rating);
+			if (error) this.errorSnackbar = true;
+			else this.ratingSnackbar = true;
+		},
 		initialLoad() {
 			this.dataStore.loadThumbURL(this.map.id);
-		}
+		},
 	},
 
 	watch: {
@@ -217,7 +234,8 @@ export default {
 		const uploadingTags = ref(false);
 
 		const tagSuccessSnackbar = ref(false);
-		const tagErrorSnackbar = ref(false);
+		const errorSnackbar = ref(false);
+		const ratingSnackbar = ref(false);
 
 		const card = ref(null);
 		const isVisible = useElementVisibility(card);
@@ -237,7 +255,8 @@ export default {
 			uploadingTags,
 
 			tagSuccessSnackbar,
-			tagErrorSnackbar,
+			errorSnackbar,
+			ratingSnackbar,
 
 			card
 		}

@@ -6,6 +6,29 @@ import supabase from '@/plugins/supabase';
 import DEBUGS from '@/plugins/debug';
 import Compressor from 'compressorjs'
 
+const STATISTICS_SELECT_QUERY = `
+id,
+key,
+text_value,
+num_value,
+bool_value,
+date_value,
+uuid_value
+`
+
+const TAG_SELECT_QUERY = `
+id,
+name,
+description,
+type:tagtypes (
+	id,
+	name,
+	description,
+	icon
+),
+num_maps
+`
+
 const MAP_SELECT_QUERY = `
 id,
 uploader (
@@ -34,12 +57,33 @@ tags:maps_tags (
 avg_rating
 `;
 
+const AUTHOR_SELECT_QUERY = `
+id,
+name,
+website,
+default_security_level (
+	name,
+	description,
+	icon
+),
+avg_rating,
+num_maps_authored
+`
+const PROFILE_SELECT_QUERY = `
+id,
+avatar_url,
+author,
+avg_rating,
+num_maps_uploaded
+`
+
 const CHUNK_SIZE = 5;
 const IMAGE_PERSISTENCE_SECONDS = 3600;
 
 export const useDataStore = defineStore({
 	id: 'data',
 	state: () => ({
+		profile: null,
 		statistics: [],
 		tags: [],
 		authors: [],
@@ -54,6 +98,7 @@ export const useDataStore = defineStore({
 	}),
   persist: true,
 	getters: {
+		getUserProfile: (state) => state.profile,
 		getTags: (state) => state.tags,
 		getAuthors: (state) => state.authors,
 		getMaps: (state) => state.maps,
@@ -62,12 +107,41 @@ export const useDataStore = defineStore({
 		getUploadStage: (state) => state.uploadStage,
 		moreMapsExist: (state) => state.totalMapsAvailable > state.maps.length,
 		getTotalMapsAvailable: (state) => state.totalMapsAvailable,
+		getUserAuthor: (state) => {
+			if (!state.getUserProfile?.author) return null;
+			return state.authors.find(a => a.id == state.getUserProfile.author);
+		},
 	},
 	actions: {
+		/**
+		 * Returns the author our logged in user is registered to represent, if any.
+		 * @returns {Object} the author our user is registered to represent, if any.
+		 */
+		/**
+		 * Loads the database profile for our authed user ID.
+		 */
+		async loadUserProfile() {
+			if (DEBUGS.pinia || DEBUGS.backend) console.log("Loading our user profile.");
+			const authStore = useAuthStore();
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(`Our user ID is ${authStore.getUser.id}`);
+
+			const { data, error } = await supabase
+				.from('profiles_view')
+				.select(PROFILE_SELECT_QUERY)
+				.limit(1);
+			
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
+			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) if (error) console.log(error);
+			if (error) return { data, error };
+
+			this.profile = data[0];
+			return { data, error };
+		},
 		/**
 		 * Create a new loading query for maps. Usually called by the "Search" button.
 		 */
 		async newMapQuery() {
+			if (DEBUGS.pinia || DEBUGS.backend) console.log("Making a new map query.");
 			this.mapChunkStart = 0;
 			const filtersStore = useFiltersStore();
 			this.maps = [];
@@ -79,7 +153,9 @@ export const useDataStore = defineStore({
 				filtersStore.getExcludedTags, 
 				filtersStore.author,
 				filtersStore.getLockStateIndex,
-				filtersStore.getMinRating
+				filtersStore.getMinRating,
+				filtersStore.getUploader,
+				filtersStore.getRatedBy
 			);
 			if (data && !error) this.incrementMapChunk(); 
 		},
@@ -87,6 +163,7 @@ export const useDataStore = defineStore({
 		 * Increment the chunk of maps we're currently loading by adding the chunk size, stopping at the max maps available.
 		 */
 		incrementMapChunk() {
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(`Incrementing our map loading chunk by ${CHUNK_SIZE}.`);
 			this.mapChunkStart = Math.min(this.mapChunkStart + CHUNK_SIZE, this.totalMapsAvailable);
 		},
 		/**
@@ -110,8 +187,9 @@ export const useDataStore = defineStore({
 					filtersStore.getExcludedTags, 
 					filtersStore.author,
 					filtersStore.getLockStateIndex,
-					filtersStore.getMinRating
-
+					filtersStore.getMinRating,
+					filtersStore.getUploader,
+					filtersStore.getRatedBy
 				);
 				data = filteredMapsResult.data;
 				error = filteredMapsResult.error;
@@ -198,15 +276,7 @@ export const useDataStore = defineStore({
 			const date = new Date().toISOString();
 			let query = supabase
 				.from('statistics')
-				.select(`
-					id,
-					key,
-					text_value,
-					num_value,
-					bool_value,
-					date_value,
-					uuid_value
-				`);
+				.select(STATISTICS_SELECT_QUERY);
 			const { data, error } = await query;
 
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
@@ -227,18 +297,7 @@ export const useDataStore = defineStore({
 			const date = new Date().toISOString();
 			let query = supabase
 				.from('tags')
-				.select(`
-					id,
-					name,
-					description,
-					type:tagtypes (
-						id,
-						name,
-						description,
-						icon
-					),
-					num_maps
-				`);
+				.select(TAG_SELECT_QUERY);
 			if (this.lastTagsReadDate) query = query.gte('updated_at', this.lastTagsReadDate); 
 			const { data, error } = await query;
 
@@ -262,17 +321,8 @@ export const useDataStore = defineStore({
 
 			const date = new Date().toISOString();
 			let query = supabase
-				.from('authors')
-				.select(`
-					id,
-					name,
-					website,
-					default_security_level (
-						name,
-						description,
-						icon
-					)
-				`);
+				.from('authors_view')
+				.select(AUTHOR_SELECT_QUERY);
 			if (this.lastAuthorsReadDate) query = query.gte('updated_at', this.lastAuthorsReadDate); 
 			const { data, error } = await query;
 
@@ -326,7 +376,7 @@ export const useDataStore = defineStore({
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(`Loading a single map with id ${id}.`);
 			
 			const { data, error } = await supabase
-				.from('maps')
+				.from('maps_view')
 				.select(MAP_SELECT_QUERY)
 				.eq('id', id);
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
@@ -347,11 +397,13 @@ export const useDataStore = defineStore({
 		 * @param {Array(Object)} includedTags the tags we're filtering positively by.
 		 * @param {Array(Object)} excludedTags the tags we're filtering negatively by.
 		 * @param {Object} author the author we're filtering positively by.
-		 * @param {int} lockState the lock state of the maps we're allowing; 0 for all, 1 for .
-		 * @param {float} minRating the author we're filtering positively by.
+		 * @param {int} lockState the lock state of the maps we're allowing; 0 for all, 1 for only unpaid, 2 for paid only.
+		 * @param {float} minRating filters by whether the map has a greater than or equal to average rating than the given number.
+		 * @param {String} uploader filters by whether the given profile ID has uploaded the map.
+		 * @param {String} ratedBy filters by whether the given profile ID has rated the map.
 		 * @return {Object} a destructured object of keys "data," containing the database result data, and "error," containing optional error data.
 		 */
-		async loadFilteredMaps(rangeStart, rangeEnd, includedTags, excludedTags, author, lockState, minRating) {
+		async loadFilteredMaps(rangeStart, rangeEnd, includedTags, excludedTags, author, lockState, minRating, uploader, ratedBy) {
 			if (this.isLoading) return;
 			this.loading = true;
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(`Getting filtered maps between indices ${rangeStart} and ${rangeEnd}.`);
@@ -361,6 +413,8 @@ export const useDataStore = defineStore({
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(author);
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(lockState);
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(minRating);
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(uploader);
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(ratedBy);
 
 			let query = supabase
 				.from('maps_view')
@@ -378,6 +432,8 @@ export const useDataStore = defineStore({
 				else if (lockState == 2) query = query.eq('security_level', 2);
 			}
 			if (minRating) query = query.gte('avg_rating', minRating);
+			if (uploader) query = query.eq('uploader', uploader);
+			if (ratedBy) query = query.contains('rated_by', [ratedBy]);
 
 			const { data, count, error } = await query;
 			

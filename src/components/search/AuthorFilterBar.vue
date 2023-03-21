@@ -8,7 +8,7 @@
 		item-title="name"
 		return-object
 	>
-		<template v-slot:label="{ props, item }">
+		<template v-slot:label="{ props }">
 			<span v-bind="props">
 				<v-icon class="mr-1">mdi-account</v-icon>
 				&nbsp;Filter by an author:

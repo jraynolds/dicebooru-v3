@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { useStorage } from "@vueuse/core"
 import supabase from '@/plugins/supabase';
 import DEBUGS from '@/plugins/debug';
+import { useDataStore } from '@/stores/data';
 
 export const useAuthStore = defineStore({
 	id: 'auth',
@@ -40,7 +41,10 @@ export const useAuthStore = defineStore({
 			}
 
 			if (data != null) this.session = data.session;
-			if (data?.session?.user != null) this.user = data.session.user;
+			if (data?.session?.user != null) {
+				this.user = data.session.user;
+				useDataStore().loadUserProfile();
+			}
 		},
 		// async fetchPosts() {
 		//   this.posts = []
