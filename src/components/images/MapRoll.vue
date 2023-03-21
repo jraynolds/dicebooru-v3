@@ -31,7 +31,9 @@
 			>
 				<v-progress-circular indeterminate size="small" v-if="dataStore.isLoading" />
 				<span v-if="dataStore.isLoading">'&nbsp;Loading more...'</span>
-				<span v-else-if="dataStore.moreMapsExist">Scroll down to load more maps!</span>
+				<span v-else-if="dataStore.moreMapsExist">
+					Scroll down or <v-btn variant="text" @click="loadMoreMaps">click here</v-btn> load more maps!
+				</span>
 				<span v-else>All maps loaded!</span>
 			</v-col>
 		</v-row>
@@ -81,8 +83,6 @@ export default {
       if (this.infiniteScroll) {
         document.addEventListener('scroll', function (e) {
           var rect = el.getBoundingClientRect();
-          console.log(rect);
-          console.log(window.innerHeight);
           const isVisible = (rect.top >= 0) && (rect.bottom <= window.innerHeight);
           if (isVisible) this.loadMoreMaps();
         }.bind(this));

@@ -5,6 +5,7 @@
 	>
 		<MapCard 
 			:map="map" 
+			style="max-width: 1200px;"
 			width="80vw"
 			height="80vh"
 			@imageClick="imageClick"

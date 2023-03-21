@@ -1,4 +1,8 @@
 <template>
+	<Sidebar
+		:popoutIcons="['mdi-account', 'mdi-account-off']"
+	/>
+
 	<ImageUpload />
 
 	<MapPopup :open="popupOpen" @update:open="popupOpen = $event" :map="popupMap" />
@@ -6,9 +10,6 @@
 	<v-container style="min-height: 100%;" class="justify-center align-center d-flex flex-wrap">
 
 		<v-row class="justify-center align-center d-flex flex-column">
-			<v-col class="px-12">
-				<UserCard />
-			</v-col>
 
 			<v-col class="px-12">
 				<v-card>
@@ -48,6 +49,7 @@ import ImageUpload from '@/components/images/ImageUpload.vue';
 import MapPopup from '@/components/images/MapPopup.vue';
 import UserCard from '@/components/account/UserCard.vue';
 import MapRoll from '@/components/images/MapRoll.vue';
+import Sidebar from '@/components/framework/Sidebar.vue';
 
 import { useAuthStore } from '@/stores/auth';
 import { useDataStore } from '@/stores/data';
@@ -69,7 +71,7 @@ const tabs = [
 ];
 
 export default {
-	components: { ImageUpload, MapPopup, UserCard, MapRoll },
+	components: { ImageUpload, MapPopup, UserCard, MapRoll, Sidebar },
 
 	watch: {
 		rollTab(val) {

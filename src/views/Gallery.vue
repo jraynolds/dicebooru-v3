@@ -1,5 +1,7 @@
 <template>
-	<Sidebar />
+	<Sidebar
+		:popoutIcons="['mdi-magnify', 'mdi-magnify-remove-outline']"
+	/>
 
 	<ImageUpload />
 

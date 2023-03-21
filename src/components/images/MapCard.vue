@@ -198,7 +198,7 @@ export default {
 			this.addTagDialog = false;
 		},
 		async rateMap(rating) {
-			const { error } = await this.dataStore.rateMap(map, rating);
+			const { error } = await this.dataStore.rateMap(this.map, rating);
 			if (error) this.errorSnackbar = true;
 			else this.ratingSnackbar = true;
 		},
