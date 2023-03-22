@@ -27,14 +27,14 @@
 						<v-col class="flex-grow-0">
 							<v-row class="flex-nowrap">
 								<v-col>
-									<v-btn size="large" @click="filtersStore.incrementLockState">
+									<v-btn size="large" @click="filtersStore.incrementSecurityLevel">
 										<v-icon size="large">
-											{{ filtersStore.getLockState.icon }}
+											{{ filtersStore.getSecurityLevel.icon }}
 										</v-icon>
 									</v-btn>
 								</v-col>
 								<v-col style="width: 100px;">
-									{{ filtersStore.getLockState.description }}
+									{{ filtersStore.getSecurityLevel.description }}
 								</v-col>
 							</v-row>
 						</v-col>

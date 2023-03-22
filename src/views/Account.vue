@@ -21,7 +21,7 @@
 					>
 						<v-tab :value="tabs[0].value">{{ tabs[0].title }}</v-tab>
 						<v-tab :value="tabs[1].value">{{ tabs[1].title }}</v-tab>
-						<v-tab :value="tabs[2].value" disabled>{{ tabs[2].title }}</v-tab>
+						<v-tab :value="tabs[2].value" :disabled="!dataStore.getUserAuthor">{{ tabs[2].title }}</v-tab>
 					</v-tabs>
 				</v-card>
 
@@ -78,7 +78,7 @@ export default {
 			this.filtersStore.clearFilters();
 			if (val == 'uploaded') this.filtersStore.setUploader(this.dataStore.getUserProfile.id);
 			else if (val == 'rated') this.filtersStore.setRatedBy(this.dataStore.getUserProfile.id);
-			else if (val == 'authored') this.filtersStore.setAuthor(this.dataStore.getUserProfile.author.id);
+			else if (val == 'authored') this.filtersStore.setAuthor(this.dataStore.getUserAuthor);
 			this.dataStore.newMapQuery();
 		}
 	},

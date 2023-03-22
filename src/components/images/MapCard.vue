@@ -36,6 +36,18 @@
 					</v-btn>
 				</template>
 		</v-snackbar>
+		<v-snackbar v-model="updateSnackbar" v-if="large">
+			Map settings updated!
+			<template v-slot:actions>
+					<v-btn
+						color="primary"
+						variant="text"
+						@click="updateSnackbar = false"
+					>
+						Close
+					</v-btn>
+				</template>
+		</v-snackbar>
 
 		<v-btn 
 			text 
@@ -54,10 +66,25 @@
 			<v-icon width="20" class="align-end" size="x-large">
 				{{ security_level.icon }}
 			</v-icon>
+
+			<v-btn
+				v-if="large && dataStore.getUserAuthor.id == map.author" 
+				variant="text"
+				style="position: absolute; right: 0;" 
+				@click.stop="settingsPopup = true"
+			>
+				<ImageSettingsPopup 
+					:map="map"
+					v-model:open="settingsPopup" 
+					@settingsUpdated="updateSnackbar = true"
+					@error="errorSnackbar = true"
+				/>
+				<v-icon>mdi-cog</v-icon>
+			</v-btn>
 		</v-btn>
 
 		<v-img 
-			:src="large ? map.url : map.thumb_url" 
+			:src="!large || security_level.value > 1 ? map.thumb_url : map.url" 
 			@click="$emit('imageClick')" 
 			class="clickable mb-1"
 			style="flex-shrink: 1"
@@ -143,17 +170,19 @@ import { useFiltersStore } from '@/stores/filters';
 import { useAuthStore } from '@/stores/auth';
 import { toUpperCase } from '@/scripts/extensions';
 import { useElementVisibility } from '@vueuse/core';
+import { securityLevels } from '@/scripts/security';
 
 import { ref } from 'vue';
 import StarRating from 'vue-star-rating';
 
 import TagChip from '@/components/images/TagChip.vue';
 import SearchBar from '@/components/search/SearchBar.vue';
+import ImageSettingsPopup from './ImageSettingsPopup.vue';
 
 export default {
 	props: [ "map", "large", "clickableHeader", "clickableTags" ],
 
-	components: { TagChip, SearchBar, StarRating },
+	components: { TagChip, SearchBar, StarRating, ImageSettingsPopup },
 
 	computed: {
 		author() {
@@ -165,11 +194,11 @@ export default {
 		},
 		security_level() {
 			if (!this.author) {
-				if (this.map.security_level) return this.map.security_level;
+				if (this.map.security_level) return this.securityLevels[this.map.security_level];
 				return { icon: 'mdi-lock-question' };
 			}
 			else if (this.author) {
-				if (this.map.security_level) return this.map.security_level;
+				if (this.map.security_level) return this.securityLevels[this.map.security_level];
 				if (this.author.default_security_level) return this.author.default_security_level;
 				return { icon: 'mdi-lock-open' };
 			}
@@ -236,14 +265,18 @@ export default {
 		const tagSuccessSnackbar = ref(false);
 		const errorSnackbar = ref(false);
 		const ratingSnackbar = ref(false);
+		const updateSnackbar = ref(false);
 
 		const card = ref(null);
 		const isVisible = useElementVisibility(card);
+		
+		const settingsPopup = ref(false);
 
 		return {
 			dataStore,
 			filtersStore,
 			authStore,
+			securityLevels,
 
 			toUpperCase,
 
@@ -257,8 +290,11 @@ export default {
 			tagSuccessSnackbar,
 			errorSnackbar,
 			ratingSnackbar,
+			updateSnackbar,
 
-			card
+			card,
+
+			settingsPopup
 		}
 	}
 }

@@ -1,6 +1,6 @@
 <template>
 	<v-col class="pa-0 ma-0 pr-4" style="overflow: hidden;">
-		<v-row class="px-4 pl-6 ma-0 flex-column" style="height: 100%;">
+		<v-row class="pa-0 pt-4 pl-6 ma-0 flex-column" style="height: 100%;">
 			<v-card>
 				<v-card-title class="bg-primary" style="height: 90px;">
 					<v-row class="align-center justify-center">
@@ -25,10 +25,95 @@
 					</v-row>
 				</v-card-title>
 			</v-card>
+
+			<v-list style="width: 100%;">
+				<v-list-item>
+					<template v-slot:prepend>
+						<v-icon class="mr-4">mdi-upload</v-icon>
+					</template>
+					<v-row class="pa-0 ma-0">
+						You've uploaded {{ dataStore.getUserProfile.num_maps_uploaded }} maps with an average rating of 
+						<StarRating
+							class="ml-2" 
+							:rating="dataStore.getUserProfile.avg_rating"
+							:read-only="true"
+							:star-size="20"
+							:increment=".5"
+							:show-rating="false"
+						/>
+						.
+					</v-row>
+				</v-list-item>
+				
+				<v-list-item v-if="dataStore.getUserAuthor" class="bg-grey-lighten-4">
+					<template v-slot:prepend>
+						<v-icon class="mr-4">mdi-brush</v-icon>
+					</template>
+					<v-row class="pa-0 ma-0">
+						You've created {{ dataStore.getUserAuthor.num_maps_authored }} maps with an average rating of 
+						<StarRating
+							class="ml-2" 
+							:rating="dataStore.getUserAuthor.avg_rating"
+							:read-only="true"
+							:star-size="20"
+							:increment=".5"
+							:show-rating="false"
+						/>
+						.
+					</v-row>
+				</v-list-item>
+				
+				<v-list-item v-if="dataStore.getUserAuthor">
+					<template v-slot:prepend>
+						<v-icon class="mr-4">mdi-earth</v-icon>
+					</template>
+					<v-list-item-title>
+						Your website is: 
+						<v-text-field 
+							class="mt-2"
+							:label="`enter a URL.`"
+							v-model="website" 
+							variant="outlined"
+							density="compact"
+						/>
+					</v-list-item-title>
+					<v-row class="pa-0 ma-0 align-center">
+					</v-row>
+					<v-list-item-subtitle style="height: 35px;">
+						This is the default site users will be sent to when they click on one of your maps, if it's not available for free. Per-map settings override this.
+					</v-list-item-subtitle>
+				</v-list-item>				
+				
+				<v-list-item v-if="dataStore.getUserAuthor" class="bg-grey-lighten-4">
+					<template v-slot:prepend>
+						<v-icon class="mr-4">mdi-lock</v-icon>
+					</template>
+					<v-list-item-title>
+						The default restriction level for maps you create is:
+						<SecurityLevelDropdown v-model:selection="securityLevelIndex" />
+					</v-list-item-title>
+					<v-row class="pa-0 ma-0 align-center">
+					</v-row>
+					<v-list-item-subtitle style="height: 35px;">
+						This is the default restriction setting for your maps. Per-map settings override this. Non-free maps can't be seen at full resolution.
+					</v-list-item-subtitle>
+				</v-list-item>
+			</v-list>
+
+			<v-spacer />
+
+			<v-btn color="primary" size="large" :disabled="updatingAuthorSettings" class="mb-1" @click="updatePreferences">
+				Update preferences
+				<v-progress-circular 
+					v-show="updatingAuthorSettings" 
+					indeterminate 
+					size="small" 
+					class="ml-2" 
+				/>
+			</v-btn>
+
 		</v-row>
 	</v-col>
-
-		
 </template>
 
 <script>
@@ -39,47 +124,28 @@ import { useDataStore } from "@/stores/data"
 import { toUpperCase } from "@/scripts/extensions"
 
 import StarRating from "vue-star-rating"
-
-const lockStates = [
-	{
-		title: "free",
-		icon: "mdi-lock-open",
-		description: "Free for non-commercial use.",
-		value: 1,
-	},
-	{
-		title: "locked",
-		icon: "mdi-lock",
-		description: "Maps can be bought on an external site.",
-		value: 2,
-	},
-	{
-		title: "forbidden",
-		icon: "mdi-lock-off",
-		description: "Maps can't be bought or used.",
-		value: 3,
-	},
-];
+import SecurityLevelDropdown from "@/components/account/SecurityLevelDropdown.vue"
 
 export default {
 	components: {
-		StarRating
-	},
+    StarRating,
+    SecurityLevelDropdown
+},
 
 	computed: {
 		userTitle() { 
-			return this.dataStore.getUserAuthor?.name || this.authStore.getUser.email;
+			return this.dataStore.getUserAuthor?.name || this.authStore.getUser.email || 'unknown';
 		},
-		lockState() {
-			return this.lockStates[this.lockStateIndex];
-		}
 	},
 
 	methods: {
-		selectLockStateIndex(index) {
-			this.lockStateIndex = index;
-			this.lockStateDropdown.$el.focus();
-			this.lockStateDropdown.blur();
+		async updatePreferences() {
+			this.updatingAuthorSettings = true;
+
+			await this.dataStore.updateAuthorSettings(this.dataStore.getUserAuthor.id, this.website, this.securityLevelIndex);
+			this.$emit('updateFinished');
+
+			this.updatingAuthorSettings = false;
 		}
 	},
 
@@ -87,6 +153,7 @@ export default {
 		if (this.dataStore.getUserAuthor) {
 			this.$nextTick(() => {
 				this.website = this.dataStore.getUserAuthor.website || '';
+				this.securityLevelIndex = this.dataStore.getUserAuthor.default_security_level.id - 1 || 0;
 			});
 		}
 	},
@@ -96,9 +163,7 @@ export default {
 		const dataStore = useDataStore();
 
 		const website = ref('');
-
-		const lockStateDropdown = ref(null);
-		const lockStateIndex = ref(1);
+		const securityLevelIndex = ref(1);
 
 		const updatingAuthorSettings = ref(false);
 
@@ -109,9 +174,7 @@ export default {
 
 			website,
 
-			lockStates,
-			lockStateDropdown,
-			lockStateIndex,
+			securityLevelIndex,
 
 			updatingAuthorSettings
 		}

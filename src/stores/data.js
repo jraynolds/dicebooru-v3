@@ -6,6 +6,29 @@ import supabase from '@/plugins/supabase';
 import DEBUGS from '@/plugins/debug';
 import Compressor from 'compressorjs'
 
+
+/**
+ * Adds elements to an array, updating elements with matching IDs instead.
+ * @param {Array(Object)} array the existing array to be added to.
+ * @param {Array(Object)} elements the new elements to be added or updated. 
+ */
+const addAndUpdate = (array, elements) => {
+	let isPresent = false;
+	const additions = [];
+	for (let i=0; i<elements.length; i++) {
+		isPresent = false;
+		for (let j=0; j<array.length; j++) {
+			if (elements[i].id == array[j].id) {
+				Object.assign(array[j], elements[i]);
+				isPresent = true;
+				break;
+			}
+		}
+		if (!isPresent) additions.push(elements[i]);
+	}
+	for (const element of additions) array.push(element);
+};
+
 const STATISTICS_SELECT_QUERY = `
 id,
 key,
@@ -62,6 +85,7 @@ id,
 name,
 website,
 default_security_level (
+	id,
 	name,
 	description,
 	icon
@@ -152,7 +176,7 @@ export const useDataStore = defineStore({
 				filtersStore.getIncludedTags, 
 				filtersStore.getExcludedTags, 
 				filtersStore.author,
-				filtersStore.getLockStateIndex,
+				filtersStore.getSecurityLevelIndex,
 				filtersStore.getMinRating,
 				filtersStore.getUploader,
 				filtersStore.getRatedBy
@@ -186,7 +210,7 @@ export const useDataStore = defineStore({
 					filtersStore.getIncludedTags, 
 					filtersStore.getExcludedTags, 
 					filtersStore.author,
-					filtersStore.getLockStateIndex,
+					filtersStore.getSecurityLevelIndex,
 					filtersStore.getMinRating,
 					filtersStore.getUploader,
 					filtersStore.getRatedBy
@@ -225,27 +249,6 @@ export const useDataStore = defineStore({
 				if (t1.type.id == t2.type.id) return t2.num_maps - t1.num_maps;
 				if (t1.type.id > t2.type.id) return 1;
 			});
-		},
-		/**
-		 * Adds elements to an array, updating elements with matching IDs instead.
-		 * @param {Array(Object)} array the existing array to be added to.
-		 * @param {Array(Object)} elements the new elements to be added or updated. 
-		 */
-		addAndUpdate(array, elements) {
-			let isPresent = false;
-			const additions = [];
-			for (let i=0; i<elements.length; i++) {
-				isPresent = false;
-				for (let j=0; j<array.length; j++) {
-					if (elements[i].id == array[j].id) {
-						Object.assign(array[j], elements[i]);
-						isPresent = true;
-						break;
-					}
-				}
-				if (!isPresent) additions.push(elements[i]);
-			}
-			for (const element of additions) array.push(element);
 		},
 		/**
 		 * Perform an initial load for the database when the page refreshes.
@@ -306,7 +309,7 @@ export const useDataStore = defineStore({
 			if (error) return { data, error };
 			this.lastTagsReadDate = date;
 
-			this.addAndUpdate(this.tags, data);
+			addAndUpdate(this.tags, data);
 
 			this.orderTags();
 					
@@ -331,7 +334,7 @@ export const useDataStore = defineStore({
 			if (error) return { data, error };
 			this.lastAuthorsReadDate = date;
 
-			this.addAndUpdate(this.authors, data);
+			addAndUpdate(this.authors, data);
 
 			return { data, error };
 		},
@@ -362,7 +365,7 @@ export const useDataStore = defineStore({
 			}
 			// this.lastMapsReadDate = date;
 			
-			this.addAndUpdate(this.maps, data);
+			addAndUpdate(this.maps, data);
 
 			this.loading = false;
 			return { data, error };
@@ -382,11 +385,7 @@ export const useDataStore = defineStore({
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
 			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) if (error) console.log(error);
 
-			const i = this.maps.indexOf(this.maps.find(m => m.id === id));
-			if (i >= 0) {
-				Object.assign(this.maps[i], data[0]);
-			}
-			else this.maps.push(data[0]);
+			addAndUpdate(this.maps, data);
 
 			return { data, error };
 		},
@@ -397,13 +396,13 @@ export const useDataStore = defineStore({
 		 * @param {Array(Object)} includedTags the tags we're filtering positively by.
 		 * @param {Array(Object)} excludedTags the tags we're filtering negatively by.
 		 * @param {Object} author the author we're filtering positively by.
-		 * @param {int} lockState the lock state of the maps we're allowing; 0 for all, 1 for only unpaid, 2 for paid only.
+		 * @param {int} securityLevel the security level of the maps we're allowing; 0 for all, 1 for only unpaid, 2 for paid only.
 		 * @param {float} minRating filters by whether the map has a greater than or equal to average rating than the given number.
 		 * @param {String} uploader filters by whether the given profile ID has uploaded the map.
 		 * @param {String} ratedBy filters by whether the given profile ID has rated the map.
 		 * @return {Object} a destructured object of keys "data," containing the database result data, and "error," containing optional error data.
 		 */
-		async loadFilteredMaps(rangeStart, rangeEnd, includedTags, excludedTags, author, lockState, minRating, uploader, ratedBy) {
+		async loadFilteredMaps(rangeStart, rangeEnd, includedTags, excludedTags, author, securityLevel, minRating, uploader, ratedBy) {
 			if (this.isLoading) return;
 			this.loading = true;
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(`Getting filtered maps between indices ${rangeStart} and ${rangeEnd}.`);
@@ -411,7 +410,7 @@ export const useDataStore = defineStore({
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(includedTags);
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(excludedTags);
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(author);
-			if (DEBUGS.pinia || DEBUGS.backend) console.log(lockState);
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(securityLevel);
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(minRating);
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(uploader);
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(ratedBy);
@@ -427,9 +426,9 @@ export const useDataStore = defineStore({
 				query = query.not('tags', 'cs', excludedTagObject);
 			}
 			if (author) query = query.eq('author', author.id);
-			if (lockState != 0) {
-				if (lockState == 1) query = query.or('security_level.is.null','security_level.neq.3');
-				else if (lockState == 2) query = query.eq('security_level', 2);
+			if (securityLevel != 0) {
+				if (securityLevel == 1) query = query.or('security_level.is.null','security_level.neq.3');
+				else if (securityLevel == 2) query = query.eq('security_level', 2);
 			}
 			if (minRating) query = query.gte('avg_rating', minRating);
 			if (uploader) query = query.eq('uploader', uploader);
@@ -450,7 +449,7 @@ export const useDataStore = defineStore({
 
 			const newMaps = [];
 			for (const map of data) newMaps.push(map);
-			this.addAndUpdate(this.maps, newMaps);
+			addAndUpdate(this.maps, newMaps);
 
 			this.loading = false;
 			return { data, error };
@@ -634,6 +633,79 @@ export const useDataStore = defineStore({
 
 			map.avg_rating = rating;
 			return { data, error };
+		},
+		/**
+		 * Update an author's info in the database.
+		 * @param {String} authorID the database ID of the author we're updating.
+		 * @param {String} website the optional website URL a paid map redirects to if it's this author's.
+		 * @param {int} restrictionLevel the optional default restriction level for this author's maps.
+		 * @return {Object} a destructured object of keys "data," containing the database result data, and "error," containing optional error data.
+		 */
+		async updateAuthorSettings(authorID, website, restrictionLevel) {
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(`We're updating the author with ID ${authorID}, with website ${website} and restriction level ${restrictionLevel}.`);
+			
+			let updateObject = { };
+			if (website) updateObject.website = website;
+			if (restrictionLevel) updateObject.default_security_level = restrictionLevel;
+
+			const { error } = await supabase
+				.from('authors')
+				.update(updateObject)
+				.eq('id', authorID);
+			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) if (error) console.log(error);
+			if (error) return { error };
+			
+			const { data, error: authorError } = await supabase
+				.from('authors_view')
+				.select(MAP_SELECT_QUERY)
+				.eq('id', authorID)
+				.limit(1);
+				
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
+			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) if (authorError) console.log(authorError);
+			if (error) return { error };
+
+			addAndUpdate(this.authors, data);
+
+			return { data, authorError };
+		},
+		/**
+		 * Updates a map in the database.
+		 * @param {Object} map the map object with ID that we're updating.
+		 * @param {String} purchase_link the optional overriding URL this map redirects to.
+		 * @param {integer} security_level the optional level of security for this map.
+		 * @param {String} uploaderID the optional profile ID for the uploader of the map.
+		 * @param {String} authorID the optional author ID for the creator of the map.
+		 * @param {String} src the optional filename for the large version of the map image.
+		 * @param {String} thumb_src the optional filename for the small version of the map image.
+		 * @returns {Object} a destructured object of keys "data," containing the database result data, and "error," containing optional error data.
+		 */
+		async updateMap(map, purchase_link, security_level, uploaderID, authorID, src, thumb_src) {
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(`We're updating this map:`);
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(map);
+			if (DEBUGS.pinia || DEBUGS.backend) if (purchase_link) console.log(`Purchase link is ${purchase_link}...`);
+			if (DEBUGS.pinia || DEBUGS.backend) if (security_level) console.log(`Security level is ${security_level}...`);
+			if (DEBUGS.pinia || DEBUGS.backend) if (uploaderID) console.log(`Uploader is ${uploaderID}...`);
+			if (DEBUGS.pinia || DEBUGS.backend) if (authorID) console.log(`Author is ${authorID}...`);
+			if (DEBUGS.pinia || DEBUGS.backend) if (src) console.log(`Src is ${src}...`);
+			if (DEBUGS.pinia || DEBUGS.backend) if (thumb_src) console.log(`Thumb src is ${thumb_src}...`);
+
+			let updateObject = { };
+			if (purchase_link) updateObject.purchase_link = purchase_link;
+			if (security_level) updateObject.security_level = security_level;
+			if (uploaderID) updateObject.uploader = uploaderID;
+			if (authorID) updateObject.author = authorID;
+			if (src) updateObject.src = src;
+			if (thumb_src) updateObject.thumb_src = thumb_src;
+
+			const { error } = await supabase
+				.from('maps')
+				.update(updateObject)
+				.eq('id', map.id);
+			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) if (error) console.log(error);
+			if (error) return { data, error };
+
+			return await this.loadMap(map.id);
 		}
 	}
 })
