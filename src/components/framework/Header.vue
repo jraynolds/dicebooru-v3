@@ -13,11 +13,11 @@
 
 			<v-spacer />
 
-			<v-btn v-if="route.name == 'Gallery'" @click="reload">
-				Dice<v-icon large>mdi-dice-d20-outline</v-icon>Booru
+			<v-btn v-if="route.name == 'Gallery'" size="large" @click="reload">
+				Dice<v-icon size="xx-large">mdi-dice-d20-outline</v-icon>Booru
 			</v-btn>
-			<v-btn v-else :to="'/'">
-				Dice<v-icon large>mdi-dice-d20-outline</v-icon>Booru
+			<v-btn v-else size="large" :to="'/'">
+				Dice<v-icon size="xx-large">mdi-dice-d20-outline</v-icon>Booru
 			</v-btn>
 
 			<v-spacer />

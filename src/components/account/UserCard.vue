@@ -1,10 +1,12 @@
 <template>
+	<AuthorRegistryPopup v-model:open="registryPopup" />
+
 	<v-col class="pa-0 ma-0 pr-4" style="overflow: hidden;">
 		<v-row class="pa-0 pt-4 pl-6 ma-0 flex-column" style="height: 100%;">
 			<v-card>
 				<v-card-title class="bg-primary" style="height: 90px;">
 					<v-row class="align-center justify-center">
-						<v-col class="mb-2 d-flex align-center text-h4">
+						<v-col class="mb-2 d-flex align-center" style="max-width: 50%;">
 							{{ toUpperCase(userTitle) }}
 						</v-col>
 						<v-col class="flex-grow-0 text-body-2">
@@ -18,7 +20,9 @@
 									You're registered as an author.
 								</v-col>
 								<v-col class="pt-0 mt-0" v-if="!dataStore.getUserAuthor">
-									<v-btn variant="text">Register as a map creator</v-btn>
+									<v-btn variant="text" @click="registryPopup = true">
+										Register as a map creator
+									</v-btn>
 								</v-col>	
 							</v-row>
 						</v-col>
@@ -125,11 +129,13 @@ import { toUpperCase } from "@/scripts/extensions"
 
 import StarRating from "vue-star-rating"
 import SecurityLevelDropdown from "@/components/account/SecurityLevelDropdown.vue"
+import AuthorRegistryPopup from "@/components/account/AuthorRegistryPopup.vue"
 
 export default {
 	components: {
     StarRating,
-    SecurityLevelDropdown
+    SecurityLevelDropdown,
+    AuthorRegistryPopup
 },
 
 	computed: {
@@ -166,6 +172,7 @@ export default {
 		const securityLevelIndex = ref(1);
 
 		const updatingAuthorSettings = ref(false);
+		const registryPopup = ref(false);
 
 		return {
 			authStore,
@@ -176,7 +183,8 @@ export default {
 
 			securityLevelIndex,
 
-			updatingAuthorSettings
+			updatingAuthorSettings,
+			registryPopup
 		}
 	}
 }
