@@ -1,5 +1,5 @@
 <template>
-	<v-col class="pa-0 ma-0 pr-4" style="overflow: hidden;">
+	<v-col class="pa-0 ma-0 mr-4" style="overflow: hidden;">
 		<v-row class="pa-0 ma-0 flex-column" style="height: 100%;">
 			<v-col class="pl-6 ml-n2 flex-grow-0">
 				<v-card color="secondary" class="pa-2 pb-1">

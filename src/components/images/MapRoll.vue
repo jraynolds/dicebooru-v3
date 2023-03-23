@@ -1,7 +1,15 @@
 <template>
 		<v-row class="justify-center align-center d-flex flex-column">
 			<v-col v-if="showCount" class="align-center justify-center d-flex">
-				<v-card-title>Now showing {{ dataStore.getMaps.length }} of {{ dataStore.getTotalMapsAvailable }} maps!</v-card-title>
+				<v-row class="pa-0 ma-0">
+					<v-card-title>
+						Now showing {{ dataStore.getMaps.length }} of {{ dataStore.getTotalMapsAvailable }} maps.
+					</v-card-title>
+
+					<v-spacer/>
+
+					<v-card-title class="d-flex align-end text-subtitle-2">Scroll down to see more!</v-card-title>
+				</v-row>
 			</v-col>
 			<v-col>
 				<v-row>
@@ -9,6 +17,7 @@
 						class="d-flex align-center justify-center"
 						v-for="map in dataStore.getMaps" 
 						:key="map.id"
+						style="width: 300px;"
 					>
 						<MapCard
 							:map="map"

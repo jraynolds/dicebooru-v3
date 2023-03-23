@@ -12,9 +12,15 @@
 	>
 	
 		<v-row class="my-0 mt-1" style="height: 100%; overflow: visible; flex-wrap: nowrap;">
-			<SearchSidebar v-if="route.name == 'Gallery'" @searchFinished="drawerExpanded = false" />
+			<SearchSidebar 
+				v-if="route.name == 'Gallery'" 
+				@searchFinished="drawerExpanded = false" 
+			/>
 			
-			<UserCard v-else-if="route.name == 'Account'" @updateFinished="drawerExpanded = false" />
+			<UserCard 
+				v-else-if="route.name == 'Account'" 
+				@updateFinished="drawerExpanded = false" 
+			/>
 
 			<v-col 
 				class="d-flex align-center pa-0 ma-0 fill-height" 

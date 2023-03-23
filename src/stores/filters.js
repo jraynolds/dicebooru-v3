@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { useDataStore } from "@/stores/data"
 import DEBUGS from '@/plugins/debug';
-import { securityLevels } from "@/scripts/security"
+import { securitySearchLevels } from "@/scripts/security"
 
 export const useFiltersStore = defineStore({
 	id: 'filters',
@@ -22,7 +22,7 @@ export const useFiltersStore = defineStore({
 		getAuthor: (state) => state.author,
 		areFiltersActive: (state) => state.includedTags.length > 0 || state.excludedTags.length > 0 || state.author,
 		getSecurityLevelIndex: (state) => state.securityLevelIndex,
-		getSecurityLevel: (state) => securityLevels[state.securityLevelIndex],
+		getSecurityLevel: (state) => securitySearchLevels[state.securityLevelIndex],
 		getMinRating: (state) => state.minRating,
 		getUploader: (state) => state.uploader,
 		getRatedBy: (state) => state.ratedBy

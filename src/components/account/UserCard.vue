@@ -1,7 +1,7 @@
 <template>
 	<AuthorRegistryPopup v-model:open="registryPopup" />
 
-	<v-col class="pa-0 ma-0 pr-4" style="overflow: hidden;">
+	<v-col class="pa-0 ma-0 mr-4" style="overflow: hidden;">
 		<v-row class="pa-0 pt-4 pl-6 ma-0 flex-column" style="height: 100%;">
 			<v-card>
 				<v-card-title class="bg-primary" style="height: 90px;">

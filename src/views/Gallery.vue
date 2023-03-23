@@ -7,7 +7,10 @@
 
 	<MapPopup :open="popupOpen" @update:open="popupOpen = $event" :map="popupMap" />
 	
-	<v-container style="min-height: 100%;" class="justify-center align-center d-flex flex-wrap">
+	<v-container 
+		style="min-height: 100%; max-width: 80vw;"
+		class="justify-center align-center d-flex flex-wrap"
+	>
 		<MapRoll 
 			:showCount="true"
 			:clickableHeader="true"
