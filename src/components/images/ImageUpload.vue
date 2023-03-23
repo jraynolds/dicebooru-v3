@@ -58,12 +58,12 @@
 			</v-fab-transition>
 		</template>
 
-		<v-card class="uploadCard">
-			<v-card-title class="header bg-primary">
+		<v-card class="uploadCard px-4">
+			<v-card-title class="header bg-primary mx-n4">
 				Image Upload
 			</v-card-title>
 
-			<v-img style="height: 100%; width: 100%;" :src="url" class="centered">
+			<v-img style="height: 400px; width: 100%;" :src="url" class="centered">
 				<template v-slot:placeholder>
 					<v-icon style="font-size: 10em; color: grey !important;">
 						mdi-image-search-outline
@@ -78,7 +78,7 @@
 				v-model="imageArr"
 				variant="underlined"
 			/>
-			
+
 			<v-autocomplete
 				class="px-4"
 				bg-color="primary"
@@ -89,15 +89,15 @@
 				item-title="name"
 				return-object
 			/>
-			
-			<SearchBar
-				class="px-4"
-				bg-color="primary"
-				prepend-inner-icon="mdi-tag" 
-				:items="dataStore.getTags"
+		
+			<FoldableSearchBars 
+				class="pt-1 mx-4 mb-4"
+				color="primary"
+				icon="mdi-tag"
+				title="Map displays these tags:"
+				:items="dataStore.getTags.filter(t => !uploadTags.includes(t))"
 				:selections="uploadTags"
 				@update:selections="uploadTags = $event"
-				label="Map displays these tags:"
 			/>
 
 			<v-card-actions>
@@ -120,12 +120,12 @@ import { useAuthStore } from '@/stores/auth';
 import { useDataStore } from '@/stores/data';
 import { ref } from 'vue';
 
-import SearchBar from "@/components/search/SearchBar.vue"
+import FoldableSearchBars from "@/components/search/FoldableSearchBars.vue"
 
 export default {
 
 	components: {
-		SearchBar
+		FoldableSearchBars
 	},
 
 	computed: {
@@ -217,12 +217,6 @@ export default {
 </script>
 
 <style>
-.uploadCard {
-	display: grid !important;
-	grid-template-rows: 50px 300px 80px 80px 80px;
-	row-gap: 5px;
-}
-
 .v-img.centered .v-img__placeholder {
 	display: flex; 
 	align-items: center; 

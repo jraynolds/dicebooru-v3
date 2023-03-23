@@ -101,7 +101,7 @@ avg_rating,
 num_maps_uploaded
 `
 
-const CHUNK_SIZE = 5;
+const CHUNK_SIZE = 12;
 const IMAGE_PERSISTENCE_SECONDS = 3600;
 
 export const useDataStore = defineStore({

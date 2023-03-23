@@ -18,15 +18,48 @@
 						<v-card-title><v-icon>{{ icon }}</v-icon>{{ title }}</v-card-title>
 					</v-col>
 
-					<v-col cols="6" v-for="i of 4" :key="i" class="mb-n8 px-1">
+					<v-col cols="6" class="mb-n8 px-1">
 						<SearchBar 
-							:prepend-inner-icon="icons[i-1]" 
-							:items="items.filter(item => item.type.id === i)"
-							:selections="selections.filter(s => s.type.id == i)"
-							@update:selections="$emit('update:selections', this.selections.concat($event));"
+							:prepend-inner-icon="icons[0]" 
+							:items="items.filter(item => item.type.id === 1)"
+							v-model:selections="sceneSelections"
 							:displayCount="true"
 							:simpleDisplay="true"
-							:label="labels[i-1]"
+							:label="labels[0]"
+							:clearable="false"
+						/>
+					</v-col>
+					<v-col cols="6" class="mb-n8 px-1">
+						<SearchBar 
+							:prepend-inner-icon="icons[1]" 
+							:items="items.filter(item => item.type.id === 2)"
+							v-model:selections="metaSelections"
+							:displayCount="true"
+							:simpleDisplay="true"
+							:label="labels[1]"
+							:clearable="false"
+						/>
+					</v-col>
+					<v-col cols="6" class="mb-n8 px-1">
+						<SearchBar 
+							:prepend-inner-icon="icons[2]" 
+							:items="items.filter(item => item.type.id === 3)"
+							v-model:selections="featureSelections"
+							:displayCount="true"
+							:simpleDisplay="true"
+							:label="labels[2]"
+							:clearable="false"
+						/>
+					</v-col>
+					<v-col cols="6" class="mb-n8 px-1">
+						<SearchBar 
+							:prepend-inner-icon="icons[3]" 
+							:items="items.filter(item => item.type.id === 4)"
+							v-model:selections="styleSelections"
+							:displayCount="true"
+							:simpleDisplay="true"
+							:label="labels[3]"
+							:clearable="false"
 						/>
 					</v-col>
 				</v-row>
@@ -65,21 +98,82 @@ export default {
 
 	computed: {
 
+		// aggregateSelections: {
+		// 	get() { return this.selections; },
+		// 	set(val) { this.$emit('update:selections', val); }
+		// },
+
 		sceneSelections: {
 			get() { return this.selections.filter(s => s.type.id == 1); },
-			set(val) { this.$emit('update:selections', this.selections.concat(val)); }
+			set(val) {
+				const selections = [];
+				let selection = null;
+				for (selection of this.selections) {
+					if (selection.type.id != 1 || val.includes(selection)) selections.push(selection);
+				}
+				for (selection of val) {
+					if (!selections.includes(selection)) selections.push(selection);
+				}
+
+				this.$emit(
+					'update:selections', 
+					selections
+				); 
+			}
 		},
 		metaSelections: {
 			get() { return this.selections.filter(s => s.type.id == 2); },
-			set(val) { this.$emit('update:selections', this.selections.concat(val)); }
+			set(val) {
+				const selections = [];
+				let selection = null;
+				for (selection of this.selections) {
+					if (selection.type.id != 2 || val.includes(selection)) selections.push(selection);
+				}
+				for (selection of val) {
+					if (!selections.includes(selection)) selections.push(selection);
+				}
+
+				this.$emit(
+					'update:selections', 
+					selections
+				); 
+			}
 		},
 		featureSelections: {
 			get() { return this.selections.filter(s => s.type.id == 3); },
-			set(val) { this.$emit('update:selections', this.selections.concat(val)); }
+			set(val) {
+				const selections = [];
+				let selection = null;
+				for (selection of this.selections) {
+					if (selection.type.id != 3 || val.includes(selection)) selections.push(selection);
+				}
+				for (selection of val) {
+					if (!selections.includes(selection)) selections.push(selection);
+				}
+
+				this.$emit(
+					'update:selections', 
+					selections
+				); 
+			}
 		},
 		styleSelections: {
 			get() { return this.selections.filter(s => s.type.id == 4); },
-			set(val) { this.$emit('update:selections', this.selections.concat(val)); }
+			set(val) {
+				const selections = [];
+				let selection = null;
+				for (selection of this.selections) {
+					if (selection.type.id != 4 || val.includes(selection)) selections.push(selection);
+				}
+				for (selection of val) {
+					if (!selections.includes(selection)) selections.push(selection);
+				}
+
+				this.$emit(
+					'update:selections', 
+					selections
+				); 
+			}
 		}
 
 	},
