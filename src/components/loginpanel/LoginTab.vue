@@ -17,7 +17,7 @@
 					label="password"
 					v-model="localPassword" 
 					required
-					:rules="[ v => v.length > 0 ]"
+					:rules="[ v => v.length > 0 ? true : 'must have a password' ]"
 					prepend-icon="mdi-key"
 					:type="passwordVisible ? '' : 'password'"
 				>

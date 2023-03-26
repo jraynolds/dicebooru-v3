@@ -68,7 +68,7 @@
 			</v-icon>
 
 			<v-btn
-				v-if="large && dataStore.getUserAuthor.id == map.author" 
+				v-if="large && dataStore.getUserAuthor?.id == map.author" 
 				variant="text"
 				style="position: absolute; right: 0;" 
 				@click.stop="settingsPopup = true"

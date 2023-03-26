@@ -60,45 +60,55 @@
 
 		<v-card class="uploadCard px-4">
 			<v-card-title class="header bg-primary mx-n4">
-				Image Upload
+				Map Upload
 			</v-card-title>
 
-			<v-img style="height: 400px; width: 100%;" :src="url" class="centered">
-				<template v-slot:placeholder>
-					<v-icon style="font-size: 10em; color: grey !important;">
-						mdi-image-search-outline
-					</v-icon>
-				</template>
-			</v-img>
+			<v-row class="flex-column">
+				<v-col class="flex-0" style="max-height: 40vh">
+					<v-img :src="url" class="centered">
+						<template v-slot:placeholder>
+							<v-icon style="font-size: 10em; color: grey !important;">
+								mdi-image-search-outline
+							</v-icon>
+						</template>
+					</v-img>
+				</v-col>
 
-			<v-file-input
-				class="px-4"
-				accept="image/*"
-				label="Map image"
-				v-model="imageArr"
-				variant="underlined"
-			/>
+				<v-col class="flex-0 ma-0 pa-0">
+					<v-file-input
+						class="px-4"
+						accept="image/*"
+						label="Map image"
+						v-model="imageArr"
+						variant="underlined"
+					/>
+				</v-col>
 
-			<v-autocomplete
-				class="px-4"
-				bg-color="primary"
-				prepend-inner-icon="mdi-account"
-				:items="dataStore.getAuthors"
-				v-model="uploadAuthor"
-				label="Made by this author:"
-				item-title="name"
-				return-object
-			/>
-		
-			<FoldableSearchBars 
-				class="pt-1 mx-4 mb-4"
-				color="primary"
-				icon="mdi-tag"
-				title="Map displays these tags:"
-				:items="dataStore.getTags.filter(t => !uploadTags.includes(t))"
-				:selections="uploadTags"
-				@update:selections="uploadTags = $event"
-			/>
+				<v-col class="flex-0 ma-0 pa-0">
+					<v-autocomplete
+						class="px-4"
+						bg-color="primary"
+						prepend-inner-icon="mdi-account"
+						:items="dataStore.getAuthors"
+						v-model="uploadAuthor"
+						label="Made by this author:"
+						item-title="name"
+						return-object
+					/>
+				</v-col>
+			
+				<v-col class="flex-1 ma-0 pa-0">
+					<FoldableSearchBars 
+						class="pt-1 mx-4 mb-4"
+						color="primary"
+						icon="mdi-tag"
+						title="Map displays these tags:"
+						:items="dataStore.getTags.filter(t => !uploadTags.includes(t))"
+						:selections="uploadTags"
+						@update:selections="uploadTags = $event"
+					/>
+				</v-col>
+			</v-row>
 
 			<v-card-actions>
 				<v-spacer />

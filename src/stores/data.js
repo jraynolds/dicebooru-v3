@@ -29,15 +29,15 @@ const addAndUpdate = (array, elements) => {
 	for (const element of additions) array.push(element);
 };
 
-const STATISTICS_SELECT_QUERY = `
-id,
-key,
-text_value,
-num_value,
-bool_value,
-date_value,
-uuid_value
-`
+// const STATISTICS_SELECT_QUERY = `
+// id,
+// key,
+// text_value,
+// num_value,
+// bool_value,
+// date_value,
+// uuid_value
+// `
 
 const TAG_SELECT_QUERY = `
 id,
@@ -108,7 +108,7 @@ export const useDataStore = defineStore({
 	id: 'data',
 	state: () => ({
 		profile: null,
-		statistics: [],
+		// statistics: [],
 		tags: [],
 		authors: [],
 		maps: [],
@@ -137,10 +137,6 @@ export const useDataStore = defineStore({
 		},
 	},
 	actions: {
-		/**
-		 * Returns the author our logged in user is registered to represent, if any.
-		 * @returns {Object} the author our user is registered to represent, if any.
-		 */
 		/**
 		 * Loads the database profile for our authed user ID.
 		 */
@@ -257,7 +253,7 @@ export const useDataStore = defineStore({
 			if (DEBUGS.pinia || DEBUGS.backend) console.log("Performing initial load.");
 			this.loading = true;
 			const promises = [
-				this.loadStatistics(),
+				// this.loadStatistics(),
 				this.loadTags(),
 				this.loadAuthors(),
 				this.loadMaps(0, CHUNK_SIZE)
@@ -265,7 +261,6 @@ export const useDataStore = defineStore({
 			await Promise.all(promises);
 
 			this.mapChunkStart = CHUNK_SIZE;
-			this.totalMapsAvailable = this.statistics.find(s => s.key == 'num_maps').num_value;
 
 			this.loading = false;
 		},
@@ -273,23 +268,23 @@ export const useDataStore = defineStore({
 		 * Load from the statistics table in the database.
 		 * @return {Object} a destructured object of keys "data," containing the database result data, and "error," containing optional error data.
 		 */
-		async loadStatistics() {
-			if (DEBUGS.pinia || DEBUGS.backend) console.log("Getting statistics.");
+		// async loadStatistics() {
+		// 	if (DEBUGS.pinia || DEBUGS.backend) console.log("Getting statistics.");
 
-			const date = new Date().toISOString();
-			let query = supabase
-				.from('statistics')
-				.select(STATISTICS_SELECT_QUERY);
-			const { data, error } = await query;
+		// 	const date = new Date().toISOString();
+		// 	let query = supabase
+		// 		.from('statistics')
+		// 		.select(STATISTICS_SELECT_QUERY);
+		// 	const { data, error } = await query;
 
-			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
-			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) if (error) console.log(error);
-			if (error) return { data, error };
+		// 	if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
+		// 	if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) if (error) console.log(error);
+		// 	if (error) return { data, error };
 			
-			this.statistics = data;
+		// 	this.statistics = data;
 					
-			return { data, error }
-		},
+		// 	return { data, error }
+		// },
 		/**
 		 * Load tags from the database.
 		 * @return {Object} a destructured object of keys "data," containing the database result data, and "error," containing optional error data.
@@ -351,24 +346,25 @@ export const useDataStore = defineStore({
 			const date = new Date().toISOString();
 			let query = supabase
 				.from('maps_view')
-				.select(MAP_SELECT_QUERY)
+				.select(MAP_SELECT_QUERY, { count: 'estimated' })
 				.order('updated_at', { ascending: false })
 				.range(rangeStart, rangeEnd);
 			// if (this.lastMapsReadDate) query = query.gte('updated_at', this.lastMapsReadDate);
-			const { data, error } = await query;
+			const { data, count, error } = await query;
 
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(count);
 			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) if (error) console.log(error);
 			if (error) {
 				this.loading = false;
-				return { data, error };
+				return { data, count, error };
 			}
-			// this.lastMapsReadDate = date;
+			this.totalMapsAvailable = count;
 			
 			addAndUpdate(this.maps, data);
 
 			this.loading = false;
-			return { data, error };
+			return { data, count, error };
 		},
 		/**
 		 * Load a map with a given id. Usually to refresh the state of the map.
@@ -417,7 +413,7 @@ export const useDataStore = defineStore({
 
 			let query = supabase
 				.from('maps_view')
-				.select(MAP_SELECT_QUERY, { count: 'exact' })
+				.select(MAP_SELECT_QUERY, { count: 'estimated' })
 				.order('updated_at', { ascending: false })
 				.range(rangeStart, rangeEnd);
 			if (includedTags?.length > 0) query = query.contains('tags', includedTags.map(t => t.id));
