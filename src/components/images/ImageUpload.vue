@@ -37,7 +37,7 @@
 					size="x-large"
 					fab
 					icon
-					style="position: fixed; right: 20px; bottom: 20px;"
+					style="position: fixed; right: 20px; bottom: 40px;"
 					v-bind="props"
 					v-if="authStore.getUser"
 				>

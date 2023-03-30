@@ -10,18 +10,30 @@
 
 			<v-card-text>
 				Please contact me on 
-				<v-btn variant="text" href="https://twitter.com/jasper_raynolds" target="_blank">
-					<v-icon>mdi-twitter</v-icon>Twitter
-				</v-btn>
+				<TwitterButton color="primary" width="100" />
 				at @jasper_raynolds to get your account set up.
+			</v-card-text>
+
+			<v-card-text>
+				Alternatively, join the 
+				<DiscordButton color="primary" width="90" />
+				and contact me there!
 			</v-card-text>
 		</v-card>
 	</v-dialog>
 </template>
 
 <script>
+import TwitterButton from "@/components/buttons/TwitterButton.vue"
+import DiscordButton from "@/components/buttons/DiscordButton.vue"
+
 export default {
 	props: [ "open" ],
+
+	components: {
+		TwitterButton,
+		DiscordButton
+	},
 
 	computed: {
 		isOpen: {
