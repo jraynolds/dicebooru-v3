@@ -86,7 +86,7 @@
 		<v-img 
 			:src="!large || security_level.value > 1 ? map.thumb_url : map.url" 
 			@click="$emit('imageClick')" 
-			class="clickable mb-1"
+			class="clickable mb-1 flex-grow-1"
 			style="flex-shrink: 1"
 		>
 			<template v-slot:placeholder>
@@ -114,7 +114,10 @@
 			</div>
 		</v-img>
 
-		<v-row class="pl-2 ma-0" style="overflow-y: auto; height: 80px; min-height: 80px;">
+		<v-row 
+			class="pl-2 ma-0" 
+			style="overflow-y: auto; height: 80px; min-height: 80px; max-height: 80px;"
+		>
 			<TagChip 
 				v-for="mapTag of tags" 
 				:key="mapTag.tag.id" 
