@@ -11,8 +11,9 @@ import Compressor from 'compressorjs'
  * Adds elements to an array, updating elements with matching IDs instead.
  * @param {Array(Object)} array the existing array to be added to.
  * @param {Array(Object)} elements the new elements to be added or updated. 
+ * @param {Boolean} [toStart=false] whether new elements should be added to the beginning of the array.
  */
-const addAndUpdate = (array, elements) => {
+const addAndUpdate = (array, elements, toStart=false) => {
 	let isPresent = false;
 	const additions = [];
 	for (let i=0; i<elements.length; i++) {
@@ -24,7 +25,10 @@ const addAndUpdate = (array, elements) => {
 				break;
 			}
 		}
-		if (!isPresent) additions.push(elements[i]);
+		if (!isPresent) {
+			if (toStart) additions.unshift(elements[i]);
+			else additions.push(elements[i]);
+		}
 	}
 	for (const element of additions) array.push(element);
 };
@@ -188,7 +192,7 @@ export const useDataStore = defineStore({
 		},
 		/**
 		 * Load additional maps from the database. Usually by reaching the end of the infinite scroller.
-		 * @return {Object} a destructured object of keys "data," containing the database result data, and "error," containing optional error data.
+		 * @returns {Object} a destructured object of keys "data," containing the database result data, and "error," containing optional error data.
 		 */
 		async loadMoreMaps() {
 			if (this.isLoading) return;
@@ -230,7 +234,7 @@ export const useDataStore = defineStore({
 		/**
 		 * Get a map author for a given map object.
 		 * @param {Object} map map object.
-		 * @return {Object} the author.
+		 * @returns {Object} the author.
 		 */
 		getMapAuthor(map) {
 			if (!map?.author) return null;
@@ -265,8 +269,25 @@ export const useDataStore = defineStore({
 			this.loading = false;
 		},
 		/**
+		 * Empties and reloads the maps for us.
+		 * @returns {Object} a destructured object of keys "data," containing the database result data, and "error," containing optional error data.
+		 */
+		async reloadMaps() {
+			if (DEBUGS.pinia || DEBUGS.backend) console.log("Reloading the maps in our database.");
+			this.loading = true;
+
+			this.maps = [];
+			const { data, error } = await this.loadMaps(0, CHUNK_SIZE);
+			if (error) return;
+			
+			this.mapChunkStart = CHUNK_SIZE;
+			this.loading = false;
+
+			return { data, error };
+		},
+		/**
 		 * Load from the statistics table in the database.
-		 * @return {Object} a destructured object of keys "data," containing the database result data, and "error," containing optional error data.
+		 * @returns {Object} a destructured object of keys "data," containing the database result data, and "error," containing optional error data.
 		 */
 		// async loadStatistics() {
 		// 	if (DEBUGS.pinia || DEBUGS.backend) console.log("Getting statistics.");
@@ -287,7 +308,7 @@ export const useDataStore = defineStore({
 		// },
 		/**
 		 * Load tags from the database.
-		 * @return {Object} a destructured object of keys "data," containing the database result data, and "error," containing optional error data.
+		 * @returns {Object} a destructured object of keys "data," containing the database result data, and "error," containing optional error data.
 		 */
 		async loadTags() {
 			if (DEBUGS.pinia || DEBUGS.backend) console.log("Getting tags.");
@@ -312,7 +333,7 @@ export const useDataStore = defineStore({
 		},
 		/**
 		 * Load authors from the database.
-		 * @return {Object} a destructured object of keys "data," containing the database result data, and "error," containing optional error data.
+		 * @returns {Object} a destructured object of keys "data," containing the database result data, and "error," containing optional error data.
 		 */
 		async loadAuthors() {
 			if (DEBUGS.pinia || DEBUGS.backend) console.log("Getting authors.");
@@ -337,7 +358,7 @@ export const useDataStore = defineStore({
 		 * Load additional maps without filters applied to the search, in a given chunk.
 		 * @param {int} rangeStart the map index to start at.
 		 * @param {int} rangeEnd the map index to end at. 
-		 * @return {Object} a destructured object of keys "data," containing the database result data, and "error," containing optional error data.
+		 * @returns {Object} a destructured object of keys "data," containing the database result data, and "error," containing optional error data.
 		 */
 		async loadMaps(rangeStart, rangeEnd) {
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(`Getting maps between indices ${rangeStart} and ${rangeEnd}.`);
@@ -361,7 +382,7 @@ export const useDataStore = defineStore({
 			}
 			this.totalMapsAvailable = count;
 			
-			addAndUpdate(this.maps, data);
+			addAndUpdate(this.maps, data, true);
 
 			this.loading = false;
 			return { data, count, error };
@@ -369,7 +390,7 @@ export const useDataStore = defineStore({
 		/**
 		 * Load a map with a given id. Usually to refresh the state of the map.
 		 * @param {String} id the ID of the map.
-		 * @return {Object} a destructured object of keys "data," containing the database result data, and "error," containing optional error data.
+		 * @returns {Object} a destructured object of keys "data," containing the database result data, and "error," containing optional error data.
 		 */
 		async loadMap(id) {
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(`Loading a single map with id ${id}.`);
@@ -381,7 +402,7 @@ export const useDataStore = defineStore({
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
 			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) if (error) console.log(error);
 
-			addAndUpdate(this.maps, data);
+			addAndUpdate(this.maps, data, true);
 
 			return { data, error };
 		},
@@ -396,7 +417,7 @@ export const useDataStore = defineStore({
 		 * @param {float} minRating filters by whether the map has a greater than or equal to average rating than the given number.
 		 * @param {String} uploader filters by whether the given profile ID has uploaded the map.
 		 * @param {String} ratedBy filters by whether the given profile ID has rated the map.
-		 * @return {Object} a destructured object of keys "data," containing the database result data, and "error," containing optional error data.
+		 * @returns {Object} a destructured object of keys "data," containing the database result data, and "error," containing optional error data.
 		 */
 		async loadFilteredMaps(rangeStart, rangeEnd, includedTags, excludedTags, author, securityLevel, minRating, uploader, ratedBy) {
 			if (this.isLoading) return;
@@ -445,7 +466,7 @@ export const useDataStore = defineStore({
 
 			const newMaps = [];
 			for (const map of data) newMaps.push(map);
-			addAndUpdate(this.maps, newMaps);
+			addAndUpdate(this.maps, newMaps, true);
 
 			this.loading = false;
 			return { data, error };
@@ -453,7 +474,7 @@ export const useDataStore = defineStore({
 		/**
 		 * Load the thumb-sized URL for a map with the given ID. Exits if we've got a valid one saved.
 		 * @param {String} mapID the ID of the map we're searching by.
-		 * @return {Object} a destructured object of keys "data," containing the database result data, and "error," containing optional error data.
+		 * @returns {Object} a destructured object of keys "data," containing the database result data, and "error," containing optional error data.
 		 */
 		async loadThumbURL(mapID) {
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(`Potentially loading a thumb URL for map ${mapID}`);
@@ -487,7 +508,7 @@ export const useDataStore = defineStore({
 		/**
 		 * Loads the full-sized URL for a map with the given ID.
 		 * @param {String} mapID the ID of the map we're searching by.
-		 * @return {Object} a destructured object of keys "data," containing the database result data, and "error," containing optional error data.
+		 * @returns {Object} a destructured object of keys "data," containing the database result data, and "error," containing optional error data.
 		 */
 		async loadURL(mapID) {
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(`Loading a URL for map ${mapID}`);
@@ -517,9 +538,9 @@ export const useDataStore = defineStore({
 		/**
 		 * Performs the resize and upload task for a given file, author, and array of tags.
 		 * @param {File} file the map image file.
-		 * @param {Object} author the author object.
+		 * @param {Object} author the author as an object, or potentially as a string--which means we'll have to create it.
 		 * @param {Array(Object)} tags the list of tags that apply to this map.
-		 * @return {Object} a destructured object of keys "data," containing the database result data, and "error," containing optional error data.
+		 * @returns {Object} a destructured object of keys "data," containing the database result data, and "error," containing optional error data.
 		 */
 		async uploadMap(file, author, tags) {
 			if (DEBUGS.pinia || DEBUGS.backend) console.log("Uploading a new map:");
@@ -531,6 +552,17 @@ export const useDataStore = defineStore({
 			// Resize the image
 			const thumbFile = await this.resizeImage(file);
 			if (!thumbFile) return;
+
+			if (typeof author == 'string') {
+				if (DEBUGS.pinia || DEBUGS.backend) console.log("We've gotta make a new author.");
+				const { data: newAuthorData, error: newAuthorError } = await supabase
+					.from('authors')
+					.insert([{ name: author }])
+					.select();
+				if (DEBUGS.pinia || DEBUGS.backend) console.log(newAuthorData);
+				if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) if (newAuthorError) console.log(newAuthorError);
+				author = newAuthorData[0];
+			}
 
 			if (DEBUGS.pinia || DEBUGS.backend) console.log("Attempting to contact server with this payload:");
 			const payload = new FormData();
@@ -558,7 +590,7 @@ export const useDataStore = defineStore({
 		 * @param {File} image the given image.
 		 * @param {int} [resizeWidth=500] the width of the resulting image.
 		 * @param {int} [resizeHeight=500] the height of the resulting image.
-		 * @return {File} the resized image.
+		 * @returns {File} the resized image.
 		 */
 		async resizeImage(image, resizeWidth=500, resizeHeight=500) {
 			if (DEBUGS.pinia) console.log("Resizing this image:");
@@ -592,7 +624,7 @@ export const useDataStore = defineStore({
 		 * Add tags to an existing map, then reload that map.
 		 * @param {Object} map the given map.
 		 * @param {Array(Object)} tags the tags being added.
-		 * @return {Object} a destructured object of keys "data," containing the database result data, and "error," containing optional error data.
+		 * @returns {Object} a destructured object of keys "data," containing the database result data, and "error," containing optional error data.
 		 */
 		async addTags(map, tags) {
 			if (DEBUGS.pinia || DEBUGS.backend) console.log("Adding tags to an existing map.");
@@ -635,7 +667,7 @@ export const useDataStore = defineStore({
 		 * @param {String} authorID the database ID of the author we're updating.
 		 * @param {String} website the optional website URL a paid map redirects to if it's this author's.
 		 * @param {int} restrictionLevel the optional default restriction level for this author's maps.
-		 * @return {Object} a destructured object of keys "data," containing the database result data, and "error," containing optional error data.
+		 * @returns {Object} a destructured object of keys "data," containing the database result data, and "error," containing optional error data.
 		 */
 		async updateAuthorSettings(authorID, website, restrictionLevel) {
 			if (DEBUGS.pinia || DEBUGS.backend) console.log(`We're updating the author with ID ${authorID}, with website ${website} and restriction level ${restrictionLevel}.`);

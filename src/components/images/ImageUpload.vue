@@ -85,7 +85,7 @@
 				</v-col>
 
 				<v-col class="flex-0 ma-0 pa-0">
-					<v-autocomplete
+					<v-combobox
 						class="px-4"
 						bg-color="primary"
 						prepend-inner-icon="mdi-account"
@@ -94,7 +94,21 @@
 						label="Made by this author:"
 						item-title="name"
 						return-object
-					/>
+						clearable
+					>
+						<template v-slot:selection="{ props, item }">
+							<span v-bind="props">
+								{{ toUpperCase(item?.raw?.name || item.raw) }}
+							</span>
+						</template>
+						<template v-slot:item="{ props, item }">
+							<v-list-item v-bind="props">
+								<template v-slot:title>
+									{{ toUpperCase(item.title) }}
+								</template>
+							</v-list-item>
+						</template>
+					</v-combobox>
 				</v-col>
 			
 				<v-col class="flex-1 ma-0 pa-0">
@@ -126,7 +140,9 @@
 </template>
 
 <script>
+import { toUpperCase } from "@/scripts/extensions"
 import { useAuthStore } from '@/stores/auth';
+import { useFiltersStore } from '@/stores/filters';
 import { useDataStore } from '@/stores/data';
 import { ref } from 'vue';
 
@@ -158,8 +174,11 @@ export default {
 			if (error) this.errorSnackbar = true;
 			else this.successSnackbar = true;
 
-			this.reset();
-			this.dataStore.loadFilteredMaps();
+			if (!error) {
+				this.reset();
+				this.filtersStore.clearFilters();
+				this.dataStore.reloadMaps();
+			}
 		},
 		reset() {
 			this.open = false;
@@ -191,6 +210,7 @@ export default {
 
 	setup() {
 		const authStore = useAuthStore();
+		const filtersStore = useFiltersStore();
 		const dataStore = useDataStore();
 
 		const open = ref(false);
@@ -206,6 +226,8 @@ export default {
 		const errorSnackbar = ref(false);
 
 		return {
+			toUpperCase,
+			filtersStore,
 			authStore,
 			dataStore,
 

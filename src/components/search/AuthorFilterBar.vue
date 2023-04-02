@@ -15,11 +15,16 @@
 			</span>
 		</template>
 		<template v-slot:selection="{ props, item }">
-			<span
-				v-bind="props"
-			>
+			<span v-bind="props">
 				{{ toUpperCase(item.raw.name) }}
 			</span>
+		</template>
+		<template v-slot:item="{ props, item }">
+			<v-list-item v-bind="props">
+				<template v-slot:title>
+					{{ toUpperCase(item.title) }}
+				</template>
+			</v-list-item>
 		</template>
 	</v-autocomplete>
 </template>
