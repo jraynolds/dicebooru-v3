@@ -388,7 +388,7 @@ export const useDataStore = defineStore({
 			}
 			this.totalMapsAvailable = count;
 			
-			addAndUpdate(this.maps, data.reverse(), true);
+			addAndUpdate(this.maps, data);
 
 			this.loading = false;
 			return { data, count, error };
@@ -470,7 +470,7 @@ export const useDataStore = defineStore({
 
 			this.totalMapsAvailable = count;
 
-			addAndUpdate(this.maps, data.reverse(), true);
+			addAndUpdate(this.maps, data);
 
 			this.loading = false;
 			return { data, error };

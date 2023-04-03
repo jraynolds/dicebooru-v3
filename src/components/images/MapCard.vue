@@ -115,7 +115,7 @@
 		</v-img>
 
 		<v-row 
-			class="pl-2 ma-0" 
+			class="px-1 ma-0" 
 			style="overflow-y: auto; height: 80px; min-height: 80px; max-height: 80px;"
 		>
 			<TagChip 

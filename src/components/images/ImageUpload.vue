@@ -3,7 +3,7 @@
 		The map was successfully uploaded!
 		<template v-slot:actions>
 				<v-btn
-					color="primary"
+					color="white"
 					variant="text"
 					@click="successSnackbar = false"
 				>
@@ -15,7 +15,7 @@
 		{{ errorMessage }}
 		<template v-slot:actions>
 				<v-btn
-					color="primary"
+					color="white"
 					variant="text"
 					@click="errorSnackbar = false"
 				>
