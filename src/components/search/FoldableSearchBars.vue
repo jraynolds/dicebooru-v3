@@ -22,11 +22,11 @@
 						<SearchBar 
 							:prepend-inner-icon="icons[0]" 
 							:items="items.filter(item => item.type.id === 1)"
-							v-model:selections="sceneSelections"
+							v-model:selections="sceneSelection"
 							:displayCount="true"
 							:simpleDisplay="true"
 							:label="labels[0]"
-							:clearable="false"
+							:single="true"
 						/>
 					</v-col>
 					<v-col cols="6" class="mb-n8 px-1">
@@ -103,17 +103,11 @@ export default {
 		// 	set(val) { this.$emit('update:selections', val); }
 		// },
 
-		sceneSelections: {
-			get() { return this.selections.filter(s => s.type.id == 1); },
+		sceneSelection: {
+			get() { return this.selections.find(s => s.type.id == 1); },
 			set(val) {
-				const selections = [];
-				let selection = null;
-				for (selection of this.selections) {
-					if (selection.type.id != 1 || val.includes(selection)) selections.push(selection);
-				}
-				for (selection of val) {
-					if (!selections.includes(selection)) selections.push(selection);
-				}
+				const selections = this.selections.filter(s => s.type.id != 1);
+				if (val) selections.push(val);
 
 				this.$emit(
 					'update:selections', 

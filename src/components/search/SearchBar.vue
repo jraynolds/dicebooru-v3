@@ -5,15 +5,15 @@
 		:label="label" 
 		:prepend-icon="icon"
 		:color="color"
-		chips
-		closable-chips
-		multiple
+		:chips="!single"
+		:closable-chips="!single"
+		:multiple="!single"
 		clearable
 		hide-selected
 		item-title="name"
 		return-object
 	>
-		<template v-slot:chip="{ props, item }">
+		<template v-slot:chip="{ props, item }" v-if="!single">
 			<v-chip
 				v-if="simpleDisplay"
 				v-bind="props"
@@ -57,7 +57,16 @@
 
 <script>
 export default {
-	props: [ "selections", "color", "label", "icon", "items", "displayCount", "simpleDisplay" ],
+	props: [ 
+		"selections", 
+		"color", 
+		"label", 
+		"icon", 
+		"items", 
+		"displayCount", 
+		"simpleDisplay",
+		"single" 
+	],
 	computed: {
 		model: {
 			get() { return this.selections; },

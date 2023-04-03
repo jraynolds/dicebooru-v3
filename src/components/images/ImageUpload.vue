@@ -1,5 +1,5 @@
 <template>
-	<v-snackbar v-model="successSnackbar">
+	<v-snackbar v-model="successSnackbar" dark>
 		The map was successfully uploaded!
 		<template v-slot:actions>
 				<v-btn
@@ -11,7 +11,7 @@
 				</v-btn>
 			</template>
 	</v-snackbar>
-	<v-snackbar v-model="errorSnackbar">
+	<v-snackbar v-model="errorSnackbar" dark>
 		{{ errorMessage }}
 		<template v-slot:actions>
 				<v-btn
