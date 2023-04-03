@@ -5,7 +5,6 @@
 	>
 		<MapCard 
 			:map="map" 
-			style="max-width: 1200px;"
 			width="80vw"
 			height="80vh"
 			@imageClick="imageClick"
@@ -34,8 +33,9 @@ export default {
 	methods: {
 		imageClick() {
 			if (this.map.purchase_link) this.openTab(this.map.purchase_link);
-			else if (this.map.security_level > 1) this.openTab(this.map.author.website);
-			else this.openTab(this.map.url);
+			else if (this.map.security_level > 1 && this.map.author.website) this.openTab(this.map.author.website);
+			else if (this.map.url) this.openTab(this.map.url);
+			return;
 		},
 		openTab(url) {
 			window.open(url, "_blank");

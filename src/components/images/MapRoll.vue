@@ -15,7 +15,7 @@
 				<v-row>
 					<v-col
 						class="d-flex align-center justify-center"
-						v-for="map in dataStore.getMaps" 
+						v-for="map in orderedMaps" 
 						:key="map.id"
 						style="width: 300px;"
 					>
@@ -72,7 +72,16 @@ export default {
 	components: { Sidebar, MapCard, ImageUpload, MapPopup, FoldableSearchBars },
 
 	computed: {
-		moreMapsExist() { return this.dataStore.moreMapsExist; }
+		moreMapsExist() { return this.dataStore.moreMapsExist; },
+		orderedMaps() { 
+			// const out = this.dataStore.getMaps.sort((a, b) => a.updated_at > b.updated_at);
+			// console.log(this.dataStore.getMaps[0]);
+			// console.log(this.dataStore.getMaps[0]?.updated_at);
+			// console.log(this.dataStore.getMaps[this.dataStore.getMaps.length-1]?.updated_at);
+			// console.log(this.dataStore.getMaps[0]?.updated_at < this.dataStore.getMaps[this.dataStore.getMaps.length-1]?.updated_at);
+			// console.log(out);
+			return this.dataStore.getMaps;
+		}
 	},
 
 	methods: {

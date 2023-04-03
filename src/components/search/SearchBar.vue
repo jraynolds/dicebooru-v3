@@ -34,7 +34,7 @@
 				<template v-slot:title>
 					{{ item.title.substring(0, 1).toUpperCase() + item.title.substring(1) }}
 					<em style="font-size: x-small; color: gray;">
-						<span v-if="displayCount">{{ `${item.value.num_maps} image${item.value.num_maps > 1 ? 's' : ''}` }}</span>
+						<span v-if="displayCount">{{ `${item.value.tagged_maps} image${item.value.tagged_maps > 1 ? 's' : ''}` }}</span>
 					</em>
 				</template>
 			</v-list-item>
@@ -47,7 +47,7 @@
 				<template v-slot:title>
 					{{ item.title.substring(0, 1).toUpperCase() + item.title.substring(1) }}
 					<em style="font-size: x-small; color: gray;">
-						<span v-if="displayCount">{{ `${item.value.num_maps} image${item.value.num_maps > 1 ? 's' : ''}` }}</span>
+						<span v-if="displayCount">{{ `${item.value.tagged_maps} image${item.value.tagged_maps > 1 ? 's' : ''}` }}</span>
 					</em>
 				</template>
 			</v-list-item>

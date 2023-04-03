@@ -6,14 +6,14 @@ import supabase from '@/plugins/supabase';
 import DEBUGS from '@/plugins/debug';
 import Compressor from 'compressorjs'
 
-
 /**
  * Adds elements to an array, updating elements with matching IDs instead.
  * @param {Array(Object)} array the existing array to be added to.
  * @param {Array(Object)} elements the new elements to be added or updated. 
  * @param {Boolean} [toStart=false] whether new elements should be added to the beginning of the array.
+ * @param {Function} sorterFunction an optional sorting function to be applied afterwards.
  */
-const addAndUpdate = (array, elements, toStart=false) => {
+const addAndUpdate = (array, elements, toStart=false, sorterFunction) => {
 	let isPresent = false;
 	const additions = [];
 	for (let i=0; i<elements.length; i++) {
@@ -25,12 +25,16 @@ const addAndUpdate = (array, elements, toStart=false) => {
 				break;
 			}
 		}
-		if (!isPresent) {
-			if (toStart) additions.unshift(elements[i]);
-			else additions.push(elements[i]);
-		}
+		if (!isPresent) additions.push(elements[i]);
 	}
-	for (const element of additions) array.push(element);
+	for (const addition of additions) {
+		if (toStart) array.unshift(addition);
+		else array.push(addition);
+	}
+
+	if (sorterFunction) {
+		array.sort(sorterFunction);
+	}
 };
 
 // const STATISTICS_SELECT_QUERY = `
@@ -53,7 +57,7 @@ type:tagtypes (
 	description,
 	icon
 ),
-num_maps
+tagged_maps
 `
 
 const MAP_SELECT_QUERY = `
@@ -81,7 +85,8 @@ tags:maps_tags (
 		)
 	)
 ),
-avg_rating
+avg_rating,
+updated_at
 `;
 
 const AUTHOR_SELECT_QUERY = `
@@ -246,7 +251,7 @@ export const useDataStore = defineStore({
 		orderTags() {
 			this.tags = this.tags.sort((t1, t2) => {
 				if (t1.type.id < t2.type.id) return -1;
-				if (t1.type.id == t2.type.id) return t2.num_maps - t1.num_maps;
+				if (t1.type.id == t2.type.id) return t2.tagged_maps - t1.tagged_maps;
 				if (t1.type.id > t2.type.id) return 1;
 			});
 		},
@@ -315,7 +320,7 @@ export const useDataStore = defineStore({
 
 			const date = new Date().toISOString();
 			let query = supabase
-				.from('tags')
+				.from('tags_view')
 				.select(TAG_SELECT_QUERY);
 			if (this.lastTagsReadDate) query = query.gte('updated_at', this.lastTagsReadDate); 
 			const { data, error } = await query;
@@ -382,7 +387,7 @@ export const useDataStore = defineStore({
 			}
 			this.totalMapsAvailable = count;
 			
-			addAndUpdate(this.maps, data, true);
+			addAndUpdate(this.maps, data.reverse(), true);
 
 			this.loading = false;
 			return { data, count, error };
@@ -464,9 +469,7 @@ export const useDataStore = defineStore({
 
 			this.totalMapsAvailable = count;
 
-			const newMaps = [];
-			for (const map of data) newMaps.push(map);
-			addAndUpdate(this.maps, newMaps, true);
+			addAndUpdate(this.maps, data.reverse(), true);
 
 			this.loading = false;
 			return { data, error };

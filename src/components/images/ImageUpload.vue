@@ -26,7 +26,7 @@
 
 	<v-dialog
 		v-model="open"
-		width="600"
+		width="60vw"
 		:persistent="uploadingMap"
 	>
 		<template v-slot:activator="{ props }">
@@ -49,7 +49,7 @@
 					size="x-large"
 					fab
 					icon
-					style="position: fixed; right: 20px; bottom: 20px;"
+					style="position: fixed; right: 20px; bottom: 40px;"
 					@click.stop="authStore.setLoginPanelOpen(true)"
 					v-else
 				>
