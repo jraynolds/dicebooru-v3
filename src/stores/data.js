@@ -57,7 +57,8 @@ type:tagtypes (
 	description,
 	icon
 ),
-tagged_maps
+tagged_maps,
+given_tags
 `
 
 const MAP_SELECT_QUERY = `

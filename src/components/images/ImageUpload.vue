@@ -120,6 +120,7 @@
 						:items="dataStore.getTags.filter(t => !uploadTags.includes(t))"
 						:selections="uploadTags"
 						@update:selections="uploadTags = $event"
+						:addGivens="true"
 					/>
 				</v-col>
 			</v-row>

@@ -8,7 +8,7 @@
 					:prepend-inner-icon="icon" 
 					:items="items"
 					:selections="selections"
-					@update:selections="$emit('update:selections', $event)"
+					@update:selections="emitSelections"
 					:displayCount="true"
 					:label="title"
 				/>
@@ -94,7 +94,7 @@ const icons = [
 
 export default {
 	components: { SearchBar },
-	props: [ "color", "icon", "title", "items", "selections" ],
+	props: [ "color", "icon", "title", "items", "selections", "addGivens" ],
 
 	computed: {
 
@@ -107,7 +107,18 @@ export default {
 			get() { return this.selections.find(s => s.type.id == 1); },
 			set(val) {
 				const selections = this.selections.filter(s => s.type.id != 1);
-				if (val) selections.push(val);
+				if (val) {
+					selections.push(val);
+
+					if (this.addGivens && val.given_tags?.length > 0) {
+						for (const given of val.given_tags) {
+							if (!selections.find(s => s.id == given)) {
+								const givenTag = this.items.find(i => i.id == given);
+								if (givenTag) selections.push(givenTag);
+							}
+						}
+					}
+				}
 
 				this.$emit(
 					'update:selections', 
@@ -170,6 +181,16 @@ export default {
 			}
 		}
 
+	},
+
+	methods: {
+		emitSelections(selections) {
+			// if (this.addGivens) {
+			// 	const difference = selections.find(s => this.selections)
+			// }
+
+			this.$emit('update:selections', selections);
+		}
 	},
 
 	setup() {
