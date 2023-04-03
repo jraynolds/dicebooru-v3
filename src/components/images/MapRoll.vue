@@ -3,19 +3,28 @@
 			<v-col v-if="showCount" class="align-center justify-center d-flex">
 				<v-row class="pa-0 ma-0">
 					<v-card-title>
-						Now showing {{ dataStore.getMaps.length }} of {{ dataStore.getTotalMapsAvailable }} maps.
+						Now showing 
+						{{ dataStore.getMaps.length }} 
+						of 
+						{{ dataStore.getTotalMapsAvailable }} 
+						maps.
 					</v-card-title>
 
 					<v-spacer/>
 
-					<v-card-title class="d-flex align-end text-subtitle-2">Scroll down to see more!</v-card-title>
+					<v-card-title 
+						class="d-flex align-end text-subtitle-2" 
+						v-if="dataStore.moreMapsExist"
+					>
+						Scroll down to see more!
+					</v-card-title>
 				</v-row>
 			</v-col>
 			<v-col>
 				<v-row>
 					<v-col
 						class="d-flex align-center justify-center"
-						v-for="map in orderedMaps" 
+						v-for="map in dataStore.getMaps" 
 						:key="map.id"
 						style="width: 300px;"
 					>
@@ -73,15 +82,6 @@ export default {
 
 	computed: {
 		moreMapsExist() { return this.dataStore.moreMapsExist; },
-		orderedMaps() { 
-			// const out = this.dataStore.getMaps.sort((a, b) => a.updated_at > b.updated_at);
-			// console.log(this.dataStore.getMaps[0]);
-			// console.log(this.dataStore.getMaps[0]?.updated_at);
-			// console.log(this.dataStore.getMaps[this.dataStore.getMaps.length-1]?.updated_at);
-			// console.log(this.dataStore.getMaps[0]?.updated_at < this.dataStore.getMaps[this.dataStore.getMaps.length-1]?.updated_at);
-			// console.log(out);
-			return this.dataStore.getMaps;
-		}
 	},
 
 	methods: {
