@@ -2,9 +2,19 @@ const toUpperCase = (str) => {
 	if (!str) return '';
 	const upperStrings = [];
 	for (const s of str.split(" ")) {
-		upperStrings.push(s.charAt(0).toUpperCase() + s.slice(1));
+		upperStrings.push(toUpperFirst(s));
 	}
 	return upperStrings.join(" ");
 }
 
-export { toUpperCase }
+const toUpperFirst = (str) => {
+	if (!str) return '';
+	return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+const sentenced = (str) => {
+	if (!str) return '';
+	return toUpperFirst(str) + '.';
+}
+
+export { toUpperCase, toUpperFirst, sentenced }

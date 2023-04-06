@@ -57,6 +57,12 @@ type:tagtypes (
 	description,
 	icon
 ),
+category:tagfeaturecategories (
+	id,
+	name,
+	description,
+	icon
+),
 tagged_maps,
 given_tags
 `
@@ -565,6 +571,7 @@ export const useDataStore = defineStore({
 					.select();
 				if (DEBUGS.pinia || DEBUGS.backend) console.log(newAuthorData);
 				if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) if (newAuthorError) console.log(newAuthorError);
+				addAndUpdate(this.authors, newAuthorData);
 				author = newAuthorData[0];
 			}
 

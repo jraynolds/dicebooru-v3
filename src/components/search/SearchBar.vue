@@ -1,7 +1,7 @@
 <template>
 	<v-autocomplete 
 		v-model="model"
-		:items="items"
+		:items="sortedItems"
 		:label="label" 
 		:prepend-icon="icon"
 		:color="color"
@@ -26,36 +26,36 @@
 				:text="item.raw.name"
 			/>
 		</template>
-		<template v-slot:item="{ props, item }">
+		<template v-slot:item="{ item, props }">
 			<v-list-item
-				v-if="simpleDisplay"
+				v-if="subcategories && item.value.header"
+				:title="toUpperFirst(item.value.title)"
+				:prepend-icon="item.value.icon"
+				:subtitle="sentenced(item.value.description)"
+			/>
+			<v-list-item
+				v-else-if="simpleDisplay"
 				v-bind="props"
-			>
-				<template v-slot:title>
-					{{ item.title.substring(0, 1).toUpperCase() + item.title.substring(1) }}
-					<em style="font-size: x-small; color: gray;">
-						<span v-if="displayCount">{{ `${item.value.tagged_maps} image${item.value.tagged_maps > 1 ? 's' : ''}` }}</span>
-					</em>
-				</template>
-			</v-list-item>
+				class="pl-2"
+				:title="toUpperFirst(item.title)"
+				:prepend-icon="'mdi'"
+				:subtitle="displayCount ? `${item.value.tagged_maps} image${item.value.tagged_maps > 1 ? 's' : ''}` : ''"
+			/>
 			<v-list-item
 				v-else
 				v-bind="props"
-				:prepend-icon="item?.raw?.type?.icon"
-				:subtitle="item?.raw?.type?.name"
+				class="pl-2"
+				:title="toUpperFirst(item.title)"
+				:prepend-icon="item?.value?.type?.icon"
 			>
-				<template v-slot:title>
-					{{ item.title.substring(0, 1).toUpperCase() + item.title.substring(1) }}
-					<em style="font-size: x-small; color: gray;">
-						<span v-if="displayCount">{{ `${item.value.tagged_maps} image${item.value.tagged_maps > 1 ? 's' : ''}` }}</span>
-					</em>
-				</template>
 			</v-list-item>
 		</template>
 	</v-autocomplete>
 </template>
 
 <script>
+import { toUpperFirst, sentenced } from '@/scripts/extensions.js'
+
 export default {
 	props: [ 
 		"selections", 
@@ -65,15 +65,64 @@ export default {
 		"items", 
 		"displayCount", 
 		"simpleDisplay",
-		"single" 
+		"single",
+		"subcategories"
 	],
 	computed: {
+		sortedItems() {
+			if (!this.subcategories) return this.items;
+			const sortedItems = this.items;
+			sortedItems.sort((i1, i2) => {
+				if (!i1.category && !i2.category) return 0;
+				if (i1.category && !i2.category) return -1;
+				if (!i1.category && i2.category) return 1;
+				if (i1.category.id != i2.category.id) return i1.category.id - i2.category.id;
+				return i2.tagged_maps - i1.tagged_maps;
+			});
+
+			const dictionary = {};
+			for (let i=0; i<sortedItems.length; i++) {
+				if (dictionary[sortedItems[i]?.category?.name] == undefined) {
+					let category = sortedItems[i]?.category;
+					dictionary[category?.name] = { 
+						id: category?.id,
+						title: category?.name,
+						icon: category?.icon,
+						description: category?.description,
+						items: []
+					};
+				}
+				dictionary[sortedItems[i]?.category?.name].items.push(sortedItems[i]);
+			}
+
+			var joinedItems = [];
+			for (const [ key, value ] of Object.entries(dictionary)) {
+				joinedItems.push({
+					id: value.id || 999,
+					title: value.title || 'unsorted',
+					header: value.title || 'unsorted',
+					icon: value.icon || 'mdi-help',
+					description: value.description || 'additional elements'
+				})
+				joinedItems = joinedItems.concat(value.items);
+			}
+
+			return joinedItems;
+		},
 		model: {
 			get() { return this.selections; },
 			set(v) {
 				console.log(v);
 				this.$emit("update:selections", v);
 			}
+		}
+	},
+
+	setup() {
+
+		return {
+			toUpperFirst,
+			sentenced
 		}
 	}
 }

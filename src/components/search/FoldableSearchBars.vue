@@ -49,6 +49,7 @@
 							:simpleDisplay="true"
 							:label="labels[2]"
 							:clearable="false"
+							:subcategories="true"
 						/>
 					</v-col>
 					<v-col cols="6" class="mb-n8 px-1">
