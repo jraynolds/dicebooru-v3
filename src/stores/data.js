@@ -65,7 +65,21 @@ category:tagfeaturecategories (
 ),
 tagged_maps,
 given_tags
-`
+`;
+
+const AUTHOR_SELECT_QUERY = `
+id,
+name,
+website,
+default_security_level (
+	id,
+	name,
+	description,
+	icon
+),
+avg_rating,
+num_maps_authored
+`;
 
 const MAP_SELECT_QUERY = `
 id,
@@ -96,26 +110,13 @@ avg_rating,
 updated_at
 `;
 
-const AUTHOR_SELECT_QUERY = `
-id,
-name,
-website,
-default_security_level (
-	id,
-	name,
-	description,
-	icon
-),
-avg_rating,
-num_maps_authored
-`
 const PROFILE_SELECT_QUERY = `
 id,
 avatar_url,
 author,
 avg_rating,
 num_maps_uploaded
-`
+`;
 
 const CHUNK_SIZE = 12;
 const IMAGE_PERSISTENCE_SECONDS = 3600;

@@ -27,13 +27,19 @@ export default {
 		isOpen: {
 			get() { return this.open; },
 			set(val) { this.$emit("update:open", val); }
+		},
+		author() { 
+			return this.dataStore.getMapAuthor(this.map);
 		}
 	},
 
 	methods: {
 		imageClick() {
 			if (this.map.purchase_link) this.openTab(this.map.purchase_link);
-			else if (this.map.security_level > 1 && this.map.author.website) this.openTab(this.map.author.website);
+			else if (this.map.security_level > 1) {
+				if (this.author.website) this.openTab(this.author.website);
+				else return;
+			} 
 			else if (this.map.url) this.openTab(this.map.url);
 			return;
 		},
