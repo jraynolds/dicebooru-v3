@@ -61,11 +61,11 @@ const tabs = [
 		value: "uploaded"
 	},
 	{
-		title: "Rated maps",
+		title: "Rated",
 		value: "rated",
 	},
 	{
-		title: "Your maps",
+		title: "Authored",
 		value: "authored"
 	}
 ];

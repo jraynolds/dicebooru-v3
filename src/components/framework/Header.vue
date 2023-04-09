@@ -5,30 +5,29 @@
 		dark
 		style="font-size: larger;"
 	>
-		<div style="position: absolute; left: 0;">
-			<v-btn icon @click="toggleDarkMode">
-				<v-icon>mdi-weather-night</v-icon>
-			</v-btn>
-		</div>
-
-		<v-spacer />
-
-		<v-btn v-if="route.name == 'Gallery'" size="large" @click="reload">
-			Dice<v-icon size="xx-large">mdi-dice-d20-outline</v-icon>Booru
-		</v-btn>
-		<v-btn v-else size="large" :to="'/'">
-			Dice<v-icon size="xx-large">mdi-dice-d20-outline</v-icon>Booru
-		</v-btn>
-
-		<v-spacer />
-
-		<v-btn icon v-if="route.name == 'Account'" @click="logout()">
-			<v-icon>mdi-account-off-outline</v-icon>
-		</v-btn>
-		<LoginPanel v-model="authStore.loginPanelOpen" v-else-if="authStore.user == null" />
-		<v-btn icon v-else-if="authStore.user != null" to="/account">
-			<v-icon>mdi-account</v-icon>
-		</v-btn>
+		<v-row>
+			<v-col class="flex-grow-0">
+				<v-btn icon @click="toggleDarkMode">
+					<v-icon>mdi-weather-night</v-icon>
+				</v-btn>
+			</v-col>
+				
+			<v-col class="text-center pl-8">
+				<v-btn v-if="route.name == 'Gallery'" size="large" @click="reload">
+					Dice<v-icon size="xx-large">mdi-dice-d20-outline</v-icon>Booru
+				</v-btn>
+			</v-col>
+				
+			<v-col class="text-right flex-grow-0">
+				<v-btn icon v-if="route.name == 'Account'" @click="logout()">
+					<v-icon>mdi-account-off-outline</v-icon>
+				</v-btn>
+				<LoginPanel v-model="authStore.loginPanelOpen" v-else-if="authStore.user == null" />
+				<v-btn icon v-else-if="authStore.user != null" to="/account">
+					<v-icon>mdi-account</v-icon>
+				</v-btn>
+			</v-col>
+		</v-row>
 	</v-app-bar>
 </template>
 

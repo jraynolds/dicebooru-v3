@@ -38,8 +38,7 @@
 				v-bind="props"
 				class="pl-2"
 				:title="toUpperFirst(item.title)"
-				:prepend-icon="'mdi'"
-				:subtitle="displayCount ? `${item.value.tagged_maps} image${item.value.tagged_maps > 1 ? 's' : ''}` : ''"
+				:subtitle="displayCount ? `${item.value.tagged_maps} image${item.value.tagged_maps == 1 ? '' : 's'}` : ''"
 			/>
 			<v-list-item
 				v-else

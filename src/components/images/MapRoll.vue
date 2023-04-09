@@ -2,12 +2,14 @@
 		<v-row class="justify-center align-center d-flex flex-column">
 			<v-col v-if="showCount" class="align-center justify-center d-flex">
 				<v-row class="pa-0 ma-0">
-					<v-card-title>
+					<v-card-title class="d-flex">
 						Now showing 
 						{{ dataStore.getMaps.length }} 
 						of 
 						{{ dataStore.getTotalMapsAvailable }} 
 						maps.
+
+						<InfoPanel class="pl-2" />
 					</v-card-title>
 
 					<v-spacer/>
@@ -65,6 +67,7 @@ import MapCard from '@/components/images/MapCard.vue';
 import ImageUpload from '@/components/images/ImageUpload.vue';
 import MapPopup from '@/components/images/MapPopup.vue';
 import FoldableSearchBars from '@/components/search/FoldableSearchBars.vue';
+import InfoPanel from '@/components/InfoPanel.vue';
 
 import { useDataStore } from '@/stores/data';
 import { useFiltersStore } from '@/stores/filters';
@@ -78,7 +81,7 @@ export default {
     "inactive"
   ],
 
-	components: { Sidebar, MapCard, ImageUpload, MapPopup, FoldableSearchBars },
+	components: { Sidebar, MapCard, ImageUpload, MapPopup, FoldableSearchBars, InfoPanel },
 
 	computed: {
 		moreMapsExist() { return this.dataStore.moreMapsExist; },
