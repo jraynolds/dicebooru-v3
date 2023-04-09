@@ -6,6 +6,11 @@ export const useVisualsStore = defineStore({
 	state: () => ({
 		dialogVisible: false,
 		dialogText: "",
+
+		snackbarVisible: false,
+		snackbarMessage: "",
+		snackbarButtonMessage: "",
+		snackbarColor: ""
 	}),
 	getters: {
 		isDarkMode: (state) => state.darkMode,
@@ -21,6 +26,14 @@ export const useVisualsStore = defineStore({
 		setDialogVisible(visible) {
 			if (DEBUGS.pinia) console.log(`Setting our dialog visible: ${visible}.`);
 			this.dialogVisible = visible;
+		},
+		showSnackbar(message, closeButtonMessage="Close", color="primary") {
+			if (DEBUGS.pinia) console.log(`Showing a snackbar with message "${message}"`);
+
+			this.snackbarMessage = message;
+			this.snackbarButtonMessage = closeButtonMessage;
+			this.snackbarColor = color;
+			this.snackbarVisible = true;
 		}
 	}
 })

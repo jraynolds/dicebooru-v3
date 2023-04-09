@@ -411,7 +411,8 @@ export const useDataStore = defineStore({
 				.from('maps_view')
 				.select(MAP_SELECT_QUERY, { count: 'estimated' })
 				.order('updated_at', { ascending: false })
-				.range(rangeStart, rangeEnd);
+				.range(rangeStart, rangeEnd)
+				.eq('report_reasons', '{}');
 			// if (this.lastMapsReadDate) query = query.gte('updated_at', this.lastMapsReadDate);
 			const { data, count, error } = await query;
 
@@ -478,7 +479,8 @@ export const useDataStore = defineStore({
 				.from('maps_view')
 				.select(MAP_SELECT_QUERY, { count: 'estimated' })
 				.order('updated_at', { ascending: false })
-				.range(rangeStart, rangeEnd);
+				.range(rangeStart, rangeEnd)
+				.eq('report_reasons', '{}');
 			if (includedTags?.length > 0) query = query.contains('tags', includedTags.map(t => t.id));
 			if (excludedTags?.length > 0) {
 				const excludedTagObject = `{${(excludedTags.map(t => `"${t.id}"`)).join("','")}}`;
@@ -572,6 +574,31 @@ export const useDataStore = defineStore({
 				map.url = data.signedUrl;
 				map.image_fetched = now;
 			}
+
+			return { data, error };
+		},
+		/**
+		 * Uploads a user report for this map.
+		 * @param {int} type the type of report generated.
+		 * @param {String} explanation the user explanation for the report.
+		 * @param {String} mapID the ID of the map this report is for.
+		 * @param {String} userID the ID of the user making the report.
+		 * @returns {Object} a destructured object of keys "data," containing the database result data, and "error," containing optional error data.
+		 */
+		async uploadReport(type, explanation, mapID, userID) {
+			if (!userID) userID = useAuthStore().getUser.id;
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(`Uploading a report for map ${mapID} by user ${userID}. The report is of type ${type}. The explanation given is, "${explanation}"`);
+
+			const { data, error } = await supabase
+				.from('reports')
+				.insert([{ profile: userID, map: mapID, reason: type, summary: explanation }])
+				.select();
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
+			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) if (error) console.log(error);
+			if (error) return { data, error };
+
+			const i = this.maps.findIndex(m => m.id == mapID);
+			if (i >= 0) this.maps.splice(i, 1);
 
 			return { data, error };
 		},
@@ -742,7 +769,7 @@ export const useDataStore = defineStore({
 		 * Updates a map in the database.
 		 * @param {Object} map the map object with ID that we're updating.
 		 * @param {String} purchase_link the optional overriding URL this map redirects to.
-		 * @param {integer} security_level the optional level of security for this map.
+		 * @param {int} security_level the optional level of security for this map.
 		 * @param {String} uploaderID the optional profile ID for the uploader of the map.
 		 * @param {String} authorID the optional author ID for the creator of the map.
 		 * @param {String} src the optional filename for the large version of the map image.

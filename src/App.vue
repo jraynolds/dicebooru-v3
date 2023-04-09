@@ -4,6 +4,7 @@
     <v-main>
       <Popup />
       <router-view></router-view>
+			<SnackBar />
     </v-main>
 		<Footer />
   </v-app>
@@ -15,15 +16,17 @@ import { useAuthStore } from '@/stores/auth'
 import Header from '@/components/framework/Header.vue'
 import Popup from '@/components/Popup.vue'
 import Footer from '@/components/framework/Footer.vue'
+import SnackBar from '@/components/framework/SnackBar.vue'
 
 export default {
   name: 'App',
 
   components: {
-		Header,
+    Header,
     Popup,
-		Footer
-  },
+    Footer,
+    SnackBar
+},
 
 	setup() {
 

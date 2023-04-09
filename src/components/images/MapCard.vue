@@ -1,78 +1,5 @@
 <template>
 	<v-card class="mapCard" ref="card">
-		<v-snackbar v-model="tagSuccessSnackbar" v-if="large">
-			Tags successfully added!
-			<template v-slot:actions>
-					<v-btn
-						color="primary"
-						variant="text"
-						@click="tagSuccessSnackbar = false"
-					>
-						Close
-					</v-btn>
-				</template>
-		</v-snackbar>
-		<v-snackbar v-model="errorSnackbar" v-if="large">
-			Unknown error.
-			<template v-slot:actions>
-					<v-btn
-						color="primary"
-						variant="text"
-						@click="errorSnackbar = false"
-					>
-						Close
-					</v-btn>
-				</template>
-		</v-snackbar>
-		<v-snackbar v-model="ratingSnackbar" v-if="large">
-			Map rated!
-			<template v-slot:actions>
-					<v-btn
-						color="primary"
-						variant="text"
-						@click="ratingSnackbar = false"
-					>
-						Close
-					</v-btn>
-				</template>
-		</v-snackbar>
-		<v-snackbar v-model="updateSnackbar" v-if="large">
-			Map settings updated!
-			<template v-slot:actions>
-					<v-btn
-						color="primary"
-						variant="text"
-						@click="updateSnackbar = false"
-					>
-						Close
-					</v-btn>
-				</template>
-		</v-snackbar>
-		<v-snackbar v-model="updateSnackbar" v-if="large">
-			Map settings updated!
-			<template v-slot:actions>
-					<v-btn
-						color="primary"
-						variant="text"
-						@click="updateSnackbar = false"
-					>
-						Close
-					</v-btn>
-				</template>
-		</v-snackbar>
-		<v-snackbar v-model="reportSnackbar" v-if="large">
-			Report submitted!
-			<template v-slot:actions>
-					<v-btn
-						color="primary"
-						variant="text"
-						@click="reportSnackbar = false"
-					>
-						Close
-					</v-btn>
-				</template>
-		</v-snackbar>
-
 		<v-btn 
 			text 
 			:disabled="!author?.name" 
@@ -81,7 +8,11 @@
 			color="primary"
 			@click.stop="clickableHeader ? $emit('headerClick') : ''"
 		>
-			<ReportDialog @submitted="reportDialog = true" v-show="large && authStore.getUser" />
+			<ReportDialog 
+				@submitted="visualsStore.showSnackbar('Report submitted! Please allow some time for review.')" 
+				v-show="large && authStore.getUser"
+				:map="map"
+			/>
 
 			<v-card-title>
 				{{ authorName }}
@@ -102,8 +33,8 @@
 				<ImageSettingsPopup 
 					:map="map"
 					v-model:open="settingsPopup" 
-					@settingsUpdated="updateSnackbar = true"
-					@error="errorSnackbar = true"
+					@settingsUpdated="visualsStore.showSnackbar('Map settings saved!')"
+					@error="visualsStore.showSnackbar('Couldn\'t save map settings. Please try again later.')"
 				/>
 				<v-icon>mdi-cog</v-icon>
 			</v-btn>
@@ -197,6 +128,7 @@
 import { useDataStore } from '@/stores/data';
 import { useFiltersStore } from '@/stores/filters';
 import { useAuthStore } from '@/stores/auth';
+import { useVisualsStore } from '@/stores/visuals';
 import { toUpperCase } from '@/scripts/extensions';
 import { useElementVisibility } from '@vueuse/core';
 import { securityLevels } from '@/scripts/security';
@@ -248,9 +180,9 @@ export default {
 		async addTags() {
 			this.uploadingTags = true;
 
-			const { data, error } = await this.dataStore.addTags(this.map, this.addedTags);
-			if (data) this.tagSuccessSnackbar = true;
-			else this.tagErrorSnackbar = true;
+			const { error } = await this.dataStore.addTags(this.map, this.addedTags);
+			if (!error) this.visualsStore.showSnackbar("Tags successfully added!");
+			else this.visualsStore.showSnackbar("Tags couldn't be added. Please try again later.");
 
 			this.uploadingTags = false;
 			this.addedTags = [];
@@ -258,8 +190,8 @@ export default {
 		},
 		async rateMap(rating) {
 			const { error } = await this.dataStore.rateMap(this.map, rating);
-			if (error) this.errorSnackbar = true;
-			else this.ratingSnackbar = true;
+			if (error) this.visualsStore.showSnackbar("Unable to rate map. Please try again later.");
+			else this.visualsStore.showSnackbar("Rating saved!");
 		},
 		initialLoad() {
 			this.dataStore.loadThumbURL(this.map.id);
@@ -285,18 +217,13 @@ export default {
 		const dataStore = useDataStore();
 		const filtersStore = useFiltersStore();
 		const authStore = useAuthStore();
+		const visualsStore = useVisualsStore();
 
 		const hasLoaded = ref(false);
 
 		const addTagDialog = ref(false);
 		const addedTags = ref([]);
 		const uploadingTags = ref(false);
-
-		const tagSuccessSnackbar = ref(false);
-		const errorSnackbar = ref(false);
-		const ratingSnackbar = ref(false);
-		const updateSnackbar = ref(false);
-		const reportSnackbar = ref(false);
 
 		const card = ref(null);
 		const isVisible = useElementVisibility(card);
@@ -307,6 +234,7 @@ export default {
 			dataStore,
 			filtersStore,
 			authStore,
+			visualsStore,
 			securityLevels,
 
 			toUpperCase,
@@ -317,12 +245,6 @@ export default {
 			addTagDialog,
 			addedTags,
 			uploadingTags,
-
-			tagSuccessSnackbar,
-			errorSnackbar,
-			ratingSnackbar,
-			updateSnackbar,
-			reportSnackbar,
 
 			card,
 

@@ -18,14 +18,17 @@
 			<v-card>
 				<v-card-title class="header bg-primary">Report this map</v-card-title>
 
-				<v-form :disabled="reportSending">
+				<v-form v-model="isReportable" :disabled="reportSending">
 					<v-col>
 						<v-select 
-							:items="dataStore.getReportReasons" 
+							:items="reportReasons" 
 							v-model="reportType"
 							return-object
 							item-title="name"
 						>
+							<template v-slot:selection="{ item, props }">
+								{{ toUpperFirst(item.raw.name) }}
+							</template>
 							<template v-slot:item="{ item, props }">
 								<v-list-item
 									v-bind="props"
@@ -40,7 +43,10 @@
 							label="Please write a short description of the problem."
 							counter
 							maxlength="200"
-							:rules="[ value => value?.length > 0 || 'Required.', value => value.length <= 200 || 'Too long!', ]"
+							:rules="[ 
+								value => value?.length > 0 || 'Required.', 
+								value => value.length <= 200 || 'Too long!' 
+							]"
 						/>
 					</v-col>
 
@@ -49,8 +55,18 @@
 							<em>A pattern of improper or abusive reports will lead to your account being restricted or banned.</em>
 						</v-card-text>
 						
-						<v-btn color="error">
-							<v-progress-circular v-show="reportSending" indeterminate size="20" color="error" class="mr-1" />
+						<v-btn 
+							color="error" 
+							:disabled="!isReportable" 
+							@click="makeReport()"
+						>
+							<v-progress-circular 
+								v-show="reportSending" 
+								indeterminate 
+								size="20" 
+								color="error" 
+								class="mr-1" 
+							/>
 							Report
 						</v-btn>
 					</v-card-actions>
@@ -63,37 +79,65 @@
 <script>
 import { ref } from 'vue';
 import { useDataStore } from "@/stores/data.js"
+import { useVisualsStore } from "@/stores/visuals.js"
 
 import { toUpperFirst, sentenced } from '@/scripts/extensions.js'
+import SnackBar from '@/components/framework/SnackBar.vue';
 
 export default {
-	methods: {
-		makeReport() {
-			this.reportSending = true;
+	props: ["map"],
 
-			this.reportSending = false;
+	components: { SnackBar },
+
+	computed: {
+		reportReasons() {
+			this.reportType = this.dataStore.getReportReasons[0];
+			return this.dataStore.getReportReasons;
 		}
 	},
 
-	setup () {
+	methods: {
+		async makeReport() {
+			this.reportSending = true;
+			const { error } = await this.dataStore.uploadReport(
+				this.reportType.id, 
+				this.reportString, 
+				this.map.id
+			);
+			this.reportSending = false;
+			if (error) this.visualsStore.showSnackbar("Unknown reporting error. Please try again later.");
+			else {
+				this.dialog = false;
+				this.$emit("submitted");
+			}
+		}
+	},
+
+	setup() {
 		const dataStore = useDataStore();
+		const visualsStore = useVisualsStore();
 
 		const dialog = ref(false);
 		const reportType = ref(null);
 		const reportString = ref("");
 		const reportSending = ref(false);
+		const errorDialog = ref(false);
+		const isReportable = ref(false);
 
 		return {
 			toUpperFirst,
 			sentenced,
-
 			dataStore,
+			visualsStore,
 
 			dialog,
 			reportType,
 			reportString,
-			reportSending
-		}
+			reportSending,
+			errorDialog,
+			isReportable
+		};
+
 	},
 }
 </script>
