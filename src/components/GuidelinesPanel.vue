@@ -34,6 +34,9 @@
 				<v-card-text>
 					If you upload maps without proper attribution, upload paid maps without being their author, or otherwise attempt to circumvent rules or common decency, your account may be restricted or even banned. 
 				</v-card-text>
+				<v-card-text>
+					Maps containing NSFW content are not allowed.
+				</v-card-text>
 				<v-card-actions>
 					<v-btn color="primary" block @click="hasUnderstood = true">Understood</v-btn>
 				</v-card-actions>

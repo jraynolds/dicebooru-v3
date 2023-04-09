@@ -47,6 +47,12 @@ const addAndUpdate = (array, elements, toStart=false, sorterFunction) => {
 // uuid_value
 // `
 
+const REPORT_REASONS_SELECT_QUERY = `
+id,
+name,
+description
+`
+
 const TAG_SELECT_QUERY = `
 id,
 name,
@@ -129,6 +135,7 @@ export const useDataStore = defineStore({
 		tags: [],
 		authors: [],
 		maps: [],
+		reportReasons: [],
 		loading: false,
 		uploadStage: 0,
 		lastTagsReadDate: null,
@@ -143,6 +150,7 @@ export const useDataStore = defineStore({
 		getTags: (state) => state.tags,
 		getAuthors: (state) => state.authors,
 		getMaps: (state) => state.maps,
+		getReportReasons: (state) => state.reportReasons,
 		isLoading: (state) => state.loading,
 		isUploading: (state) => state.uploadStage != 0,
 		getUploadStage: (state) => state.uploadStage,
@@ -273,13 +281,34 @@ export const useDataStore = defineStore({
 				// this.loadStatistics(),
 				this.loadTags(),
 				this.loadAuthors(),
-				this.loadMaps(0, CHUNK_SIZE)
+				this.loadMaps(0, CHUNK_SIZE),
+				this.loadReportReasons()
 			]
 			await Promise.all(promises);
 
 			this.mapChunkStart = CHUNK_SIZE;
 
 			this.loading = false;
+		},
+		/**
+		 * Load report reasons from the database.
+		 * @returns {Object} a destructured object of keys "data," containing the database result data, and "error," containing optional error data.
+		 */
+		async loadReportReasons() {
+			if (DEBUGS.pinia || DEBUGS.backend) console.log("Loading the report reasons in our database.");
+
+			let query = supabase
+				.from('reportreasons')
+				.select(REPORT_REASONS_SELECT_QUERY);
+			const { data, error } = await query;
+
+			if (DEBUGS.pinia || DEBUGS.backend) console.log(data);
+			if (DEBUGS.pinia || DEBUGS.backend || DEBUGS.error) if (error) console.log(error);
+			if (error) return { data, error };
+
+			addAndUpdate(this.reportReasons, data);
+					
+			return { data, error }
 		},
 		/**
 		 * Empties and reloads the maps for us.

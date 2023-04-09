@@ -48,6 +48,30 @@
 					</v-btn>
 				</template>
 		</v-snackbar>
+		<v-snackbar v-model="updateSnackbar" v-if="large">
+			Map settings updated!
+			<template v-slot:actions>
+					<v-btn
+						color="primary"
+						variant="text"
+						@click="updateSnackbar = false"
+					>
+						Close
+					</v-btn>
+				</template>
+		</v-snackbar>
+		<v-snackbar v-model="reportSnackbar" v-if="large">
+			Report submitted!
+			<template v-slot:actions>
+					<v-btn
+						color="primary"
+						variant="text"
+						@click="reportSnackbar = false"
+					>
+						Close
+					</v-btn>
+				</template>
+		</v-snackbar>
 
 		<v-btn 
 			text 
@@ -57,6 +81,8 @@
 			color="primary"
 			@click.stop="clickableHeader ? $emit('headerClick') : ''"
 		>
+			<ReportDialog @submitted="reportDialog = true" v-show="large && authStore.getUser" />
+
 			<v-card-title>
 				{{ authorName }}
 			</v-card-title>
@@ -180,12 +206,13 @@ import StarRating from 'vue-star-rating';
 
 import TagChip from '@/components/images/TagChip.vue';
 import SearchBar from '@/components/search/SearchBar.vue';
-import ImageSettingsPopup from './ImageSettingsPopup.vue';
+import ImageSettingsPopup from '@/components/images/ImageSettingsPopup.vue';
+import ReportDialog from "@/components/ReportDialog.vue"
 
 export default {
 	props: [ "map", "large", "clickableHeader", "clickableTags" ],
 
-	components: { TagChip, SearchBar, StarRating, ImageSettingsPopup },
+	components: { TagChip, SearchBar, StarRating, ImageSettingsPopup, ReportDialog },
 
 	computed: {
 		author() {
@@ -269,6 +296,7 @@ export default {
 		const errorSnackbar = ref(false);
 		const ratingSnackbar = ref(false);
 		const updateSnackbar = ref(false);
+		const reportSnackbar = ref(false);
 
 		const card = ref(null);
 		const isVisible = useElementVisibility(card);
@@ -294,6 +322,7 @@ export default {
 			errorSnackbar,
 			ratingSnackbar,
 			updateSnackbar,
+			reportSnackbar,
 
 			card,
 
