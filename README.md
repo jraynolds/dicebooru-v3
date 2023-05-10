@@ -11,5 +11,7 @@ It can be difficult for game masters to find the maps they need: by making a Goo
 ## Solution
 Dicebooru aims to be a repository of tabletop maps sorted by tags, features and image data to allow GMs to easily find a map that suits their needs. Maps are visible at a low fidelity: if freely available, the maps can be viewed at high resolution and downloaded freely. If the map-maker intends to charge for a map, then the map on Dicebooru instead links to a URL where the map can be purchased.
 
+## Tech Stack
+Dicebooru is made using Vue 3, Vuetify, and Vite. The backend is served with Supabase.
 
 The website is currently available in beta at https://dicebooru.netlify.app/
